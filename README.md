@@ -56,6 +56,12 @@ Or use the included launcher:
 
 This uses Waitress, a Windows-compatible WSGI server. It does not configure production environment variables or replace TLS termination, PostgreSQL, persistent private file storage, or deployment security settings.
 
+### Deploy to Render
+
+This is a Django project; its WSGI application is `config.wsgi:application` (not `app:app`). The included [render.yaml](./render.yaml) defines the correct Gunicorn command, binds to Render's assigned port, collects static files, provisions a PostgreSQL database, and runs database migrations at startup. To use it, create/update the Render service from the repository's Blueprint.
+
+The Blueprint passes Render's database connection URL as `DATABASE_URL`; the Django settings use it for PostgreSQL and fail startup instead of silently using SQLite when production database settings are missing. Also set `ALLOWED_HOSTS` to the service hostname and `CSRF_TRUSTED_ORIGINS` to its HTTPS origin (for example, `https://your-service.onrender.com`). Render generates `SECRET_KEY`; keep it private. Do not set `DEBUG=True` in production. Uploaded media is not persistent on a standard Render web-service filesystem, so configure persistent private storage before relying on prescription uploads in production.
+
 For image OCR, install Tesseract separately on Windows and add its installation directory to `PATH`. Install the Telugu trained data file (`tel.traineddata`) alongside the English pack to enable Telugu+English OCR. Text PDFs are extracted with pypdf; scanned PDFs require an OCR/rendering pipeline that is not currently included.
 
 ## Production deployment baseline

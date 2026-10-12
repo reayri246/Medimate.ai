@@ -2,6 +2,7 @@ import os
 import secrets
 from pathlib import Path
 
+import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
@@ -20,7 +21,7 @@ def env_list(name, default=''):
     return [value.strip() for value in os.getenv(name, default).split(',') if value.strip()]
 
 
-DEBUG = env_bool('DEBUG', True)
+DEBUG = env_bool('DEBUG', not bool(os.getenv('RENDER_EXTERNAL_HOSTNAME')))
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     if not DEBUG:
@@ -37,13 +38,15 @@ if not DEBUG:
         raise ImproperlyConfigured('Set SECRET_KEY to a unique value of at least 50 characters.')
     if not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS:
         raise ImproperlyConfigured('Set explicit production domains in ALLOWED_HOSTS.')
+    database_url = os.getenv('DATABASE_URL')
     missing_database_settings = [
         name for name in ('DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST')
         if not os.getenv(name)
     ]
-    if missing_database_settings:
+    if not database_url and missing_database_settings:
         raise ImproperlyConfigured(
-            'Missing production database settings: ' + ', '.join(missing_database_settings)
+            'Set DATABASE_URL or all production database settings: '
+            + ', '.join(missing_database_settings)
         )
 
 INSTALLED_APPS = [
@@ -97,19 +100,30 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 if USE_POSTGRES:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', ''),
-            'USER': os.getenv('DB_USER', ''),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', ''),
-            'PORT': os.getenv('DB_PORT', '5432'),
-            'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '60')),
-            'CONN_HEALTH_CHECKS': True,
-            'OPTIONS': {'sslmode': os.getenv('DB_SSLMODE', 'require' if not DEBUG else 'prefer')},
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        DATABASES = {
+            'default': dj_database_url.parse(
+                database_url,
+                conn_max_age=int(os.getenv('DB_CONN_MAX_AGE', '60')),
+                conn_health_checks=True,
+                ssl_require=not DEBUG,
+            )
         }
-    }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('DB_NAME', ''),
+                'USER': os.getenv('DB_USER', ''),
+                'PASSWORD': os.getenv('DB_PASSWORD', ''),
+                'HOST': os.getenv('DB_HOST', ''),
+                'PORT': os.getenv('DB_PORT', '5432'),
+                'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '60')),
+                'CONN_HEALTH_CHECKS': True,
+                'OPTIONS': {'sslmode': os.getenv('DB_SSLMODE', 'require' if not DEBUG else 'prefer')},
+            }
+        }
 else:
     DATABASES = {
         'default': {
