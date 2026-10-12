@@ -51,12 +51,14 @@ class PrescriptionAuditLog(models.Model):
     ACTION_REVIEWED = 'patient_reviewed'
     ACTION_DOWNLOADED = 'downloaded'
     ACTION_EXPORTED = 'exported'
+    ACTION_SOFT_COPY = 'soft_copy_viewed'
     ACTION_CHOICES = [
         (ACTION_UPLOADED, 'Uploaded'),
         (ACTION_VIEWED, 'Viewed'),
         (ACTION_REVIEWED, 'Patient reviewed'),
         (ACTION_DOWNLOADED, 'Downloaded'),
         (ACTION_EXPORTED, 'FHIR-style export'),
+        (ACTION_SOFT_COPY, 'Printable soft copy viewed'),
     ]
 
     document = models.ForeignKey(DocumentUpload, on_delete=models.CASCADE, related_name='audit_events')

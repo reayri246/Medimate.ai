@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Prescription soft copy | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="mt-4 prescription-soft-copy">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-print">
+    <div>
+      <a href="{% url 'prescription_list' %}" class="btn btn-link px-0">&larr; Back to records</a>
+      <h1 class="h2 mb-0">Prescription soft copy</h1>
+    </div>
+    <button type="button" class="btn btn-primary" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <article class="card border-0 shadow-sm p-4">
+    <header class="border-bottom pb-3 mb-3">
+      <h1 class="h3">Prescription transcription</h1>
+      <p class="mb-1"><strong>Document:</strong> {{ document.title }}</p>
+      <p class="mb-1"><strong>Patient account:</strong> {{ document.user.get_full_name|default:document.user.username }}</p>
+      <p class="mb-1"><strong>Document date uploaded:</strong> {{ created_at|date:"M j, Y · g:i A" }}</p>
+      <p class="mb-0"><strong>Review status:</strong> {{ document.get_review_status_display }}</p>
+    </header>
+
+    <div class="alert alert-warning">
+      <strong>OCR-assisted copy; compare with original.</strong>
+      {{ limitations }}
+    </div>
+
+    <h2 class="h5">Medicine and dosage text candidates</h2>
+    {% if items %}
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead>
+            <tr>
+              <th>Text matched in catalog</th>
+              <th>Ingredient composition from catalog</th>
+              <th>Strength / quantities as written</th>
+              <th>Dosage instruction exactly as read</th>
+              <th>Review</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr>
+                <td>
+                  <strong>{{ item.recognized_text|default:"Not recognized" }}</strong>
+                  <div class="small text-secondary">{{ item.match_type }} · {{ item.match_basis }}</div>
+                  {% if item.catalog_medicine and item.catalog_medicine != item.recognized_text %}
+                    <div>Catalog product: {{ item.catalog_medicine }}</div>
+                  {% endif %}
+                  {% if item.catalog_source_name %}
+                    <div class="small">Catalog source: {{ item.catalog_source_name }}
+                      {% if item.catalog_source_url %}· <a href="{{ item.catalog_source_url }}">{{ item.catalog_source_url }}</a>{% endif %}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.composition_verified and item.composition %}
+                    <ul class="mb-0">
+                      {% for ingredient in item.composition %}
+                        <li>{{ ingredient.standard_name }}{% if ingredient.strength %} — {{ ingredient.strength }}{% endif %}</li>
+                      {% endfor %}
+                    </ul>
+                    <small class="text-secondary">Verified catalog composition; not a statement of the prescribed amount.</small>
+                  {% else %}
+                    Not available from a verified catalog entry.
+                  {% endif %}
+                </td>
+                <td>
+                  <strong>Strength mentions:</strong>
+                  {% if item.strength_mentions %}{{ item.strength_mentions|join:", " }}{% else %}Not clearly extracted{% endif %}
+                  <br>
+                  <strong>Quantity:</strong>
+                  {% if item.quantity_as_written %}{{ item.quantity_as_written }}{% else %}Not explicitly recognized{% endif %}
+                  {% if item.quantity_source %}<div class="small text-secondary">Source: “{{ item.quantity_source }}”</div>{% endif %}
+                </td>
+                <td>
+                  {% if item.dosage_instructions_as_written %}“{{ item.dosage_instructions_as_written }}”{% else %}No clear matching line found{% endif %}
+                </td>
+                <td>{{ item.review_status }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p>No medicine names were matched in readable text. This does not mean the prescription contains no medicines.</p>
+    {% endif %}
+
+    {% if reviewed_medicines %}
+      <h2 class="h5 mt-4">Patient-entered corrections (separate from OCR)</h2>
+      <ul>
+        {% for item in reviewed_medicines %}
+          <li>
+            {{ item.recognized_text|default:"Marked unreadable" }}
+            {% if item.catalog_medicine_name %} · Selected catalog item: {{ item.catalog_medicine_name }}{% endif %}
+            {% if item.strength_as_written %} · Strength as entered: {{ item.strength_as_written }}{% endif %}
+            {% if item.instructions_as_written %} · Instructions as entered: {{ item.instructions_as_written }}{% endif %}
+            · {{ item.verification_status }}
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="small">Patient-entered corrections are not clinician or pharmacist verification.</p>
+    {% endif %}
+
+    <h2 class="h5 mt-4">Extracted text copy</h2>
+    <pre class="text-wrap border rounded p-3">{{ source_text|default:"No readable text was extracted." }}</pre>
+
+    <footer class="border-top pt-3 mt-4 small text-secondary">
+      Generated from local OCR/text extraction. No missing medicine, ingredient amount, strength, dose, frequency, or duration has been inferred. Do not use this copy to start, stop, or change medication. Confirm unclear details with the prescribing clinician or pharmacist.
+    </footer>
+  </article>
+</div>
+<style>
+  @media print {
+    @page { size: landscape; margin: 12mm; }
+    body { background: #fff !important; font-size: 10pt; }
+    .app-sidebar, .app-topbar, footer, .no-print { display: none !important; }
+    .app-shell, .app-main, .page-content { display: block !important; height: auto !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    .prescription-soft-copy .card { border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+    .prescription-soft-copy table { font-size: 8pt; }
+    .prescription-soft-copy tr { break-inside: avoid; }
+    a { color: #000 !important; text-decoration: none !important; }
+  }
+</style>
+{% endblock %}

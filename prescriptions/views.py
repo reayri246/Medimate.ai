@@ -12,7 +12,11 @@ from django.utils import timezone
 from .forms import MedicineReviewFormSet, UploadDocumentForm
 from .models import DocumentUpload, PrescriptionAuditLog
 from .services.ocr import extract_text_from_uploaded_file
-from .services.record_intelligence import build_fhir_bundle, extract_record_details
+from .services.record_intelligence import (
+    build_fhir_bundle,
+    build_prescription_soft_copy,
+    extract_record_details,
+)
 from medicines.models import Medicine
 
 
@@ -151,6 +155,29 @@ def document_review(request, document_id):
         'document': document,
         'formset': formset,
     })
+
+
+@login_required
+def prescription_soft_copy(request, document_id):
+    document = get_object_or_404(
+        DocumentUpload,
+        pk=document_id,
+        user=request.user,
+        document_type=DocumentUpload.TYPE_PRESCRIPTION,
+    )
+    PrescriptionAuditLog.objects.create(
+        document=document,
+        actor=request.user,
+        action=PrescriptionAuditLog.ACTION_SOFT_COPY,
+    )
+    response = render(
+        request,
+        'prescriptions/soft_copy.html',
+        build_prescription_soft_copy(document),
+    )
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 @login_required

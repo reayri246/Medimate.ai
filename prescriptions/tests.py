@@ -8,7 +8,10 @@ from medicines.models import ActiveIngredient, Medicine, MedicineIngredient
 from prescriptions.forms import UploadDocumentForm
 from prescriptions.models import DocumentUpload, PrescriptionAuditLog
 from prescriptions.services.medicine_extraction import extract_medicine_names
-from prescriptions.services.record_intelligence import extract_record_details
+from prescriptions.services.record_intelligence import (
+    build_prescription_soft_copy,
+    extract_record_details,
+)
 
 
 class DocumentSecurityTests(TestCase):
@@ -205,6 +208,57 @@ class DocumentSecurityTests(TestCase):
         self.assertEqual(details['diagnosis_mentions'][0]['text'], 'Example text from source')
         self.assertEqual(details['dates'], ['2026-10-12'])
         self.assertNotIn('abnormal', str(details).lower())
+
+    def test_soft_copy_extracts_only_explicit_quantity_and_verbatim_dosage_line(self):
+        Medicine.objects.create(
+            name='Example medicine',
+            active_ingredient='Example ingredient',
+            dosage_form='Tablet',
+            description='Test catalog entry.',
+            slug='example-medicine-soft-copy',
+        )
+        document = DocumentUpload(
+            user=self.owner,
+            title='Prescription sample',
+            file='documents/sample.txt',
+            document_type=DocumentUpload.TYPE_PRESCRIPTION,
+            extracted_text='Example medicine 250 mg — Qty: 10 tablets; take as written',
+        )
+        document.extracted_details = extract_record_details(document.extracted_text)
+
+        soft_copy = build_prescription_soft_copy(document)
+
+        self.assertEqual(len(soft_copy['items']), 1)
+        item = soft_copy['items'][0]
+        self.assertEqual(item['quantity_as_written'], '10')
+        self.assertEqual(item['strength_mentions'], ['250 mg'])
+        self.assertIn('take as written', item['dosage_instructions_as_written'])
+        self.assertEqual(item['composition'], [])
+        self.assertIn('not a new prescription', soft_copy['limitations'])
+
+    def test_soft_copy_view_is_owner_scoped_and_private(self):
+        document = DocumentUpload.objects.create(
+            user=self.owner,
+            title='Prescription',
+            file=SimpleUploadedFile('prescription.txt', b'No readable text'),
+            document_type=DocumentUpload.TYPE_PRESCRIPTION,
+        )
+        url = f'/prescriptions/{document.pk}/soft-copy/'
+        self.client.login(username='other', password='test-password')
+        self.assertEqual(self.client.get(url).status_code, 404)
+
+        self.client.login(username='owner', password='test-password')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Cache-Control'], 'private, no-store')
+        self.assertContains(response, 'Print / Save as PDF')
+        self.assertContains(response, 'No readable text was extracted.')
+        self.assertTrue(PrescriptionAuditLog.objects.filter(
+            document=document,
+            actor=self.owner,
+            action=PrescriptionAuditLog.ACTION_SOFT_COPY,
+        ).exists())
 
     def test_upload_saves_and_displays_detected_medicine(self):
         Medicine.objects.create(

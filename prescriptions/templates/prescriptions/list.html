@@ -132,6 +132,9 @@
             </section>
           {% endif %}
           <a href="{% url 'document_review' document.id %}" class="btn btn-primary btn-sm">Review or correct extracted fields</a>
+          {% if document.document_type == 'prescription' %}
+            <a href="{% url 'prescription_soft_copy' document.id %}" class="btn btn-outline-success btn-sm">Open printable soft copy</a>
+          {% endif %}
           <a href="{% url 'document_download' document.id %}" class="btn btn-outline-primary btn-sm">{% if summary_language == 'te' %}అసలు పత్రాన్ని డౌన్‌లోడ్ చేయండి{% else %}Download original{% endif %}</a>
           <a href="{% url 'document_fhir_export' document.id %}" class="btn btn-outline-secondary btn-sm">{% if summary_language == 'te' %}FHIR-శైలి JSON ఎగుమతి{% else %}Export FHIR-style JSON{% endif %}</a>
           <p class="small text-secondary mt-2 mb-0">FHIR-shaped demo export only; it is not an ABDM/ABHA connection or certified clinical record. Review OCR-derived fields before sharing.</p>

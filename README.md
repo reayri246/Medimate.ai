@@ -18,6 +18,8 @@ The record screen supports an English/Telugu summary and Telugu+English image OC
 
 Each upload has a patient-only review page where the user can correct the recognized text, optionally choose an exact catalog entry, enter strength/instructions only as seen in the source, or mark a field unreadable. Raw OCR remains unchanged and is shown separately from patient-entered review data. A patient's confirmation is not professional verification. Upload, viewed, review, download, and export actions are logged without copying extracted health text into the audit metadata. The owner-scoped JSON endpoint is `/prescriptions/<document-id>/api.json`; it requires the user's authenticated session and is not cacheable.
 
+Prescription uploads also have an owner-only **Open printable soft copy** view. It lays out the original extracted text, exact name-match candidates, dosage lines as read, and explicit quantity/strength mentions when recognized. Ingredient composition appears only for a fully source-verified catalog match and is labeled catalog information—not the prescribed dose. Use **Print / Save as PDF** in the browser to make a local copy. Missing fields are left blank/not recognized; this feature does not infer dose, duration, ingredient amounts, or what treatment to take. Viewing the soft copy is audit logged.
+
 The current OCR/recognition path is a local rules/catalog-match prototype, not a fine-tuned handwritten-prescription model. It does not emit validated recognition confidence and does not perform fuzzy substitutions. No prescription training dataset or pretrained handwriting model is bundled, and no clinical reliability claim is made. Do not treat candidates as a confirmed prescription.
 
 ## Local development on Windows

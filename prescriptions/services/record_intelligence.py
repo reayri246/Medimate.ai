@@ -5,6 +5,8 @@ from uuid import NAMESPACE_URL, uuid5
 from django.utils import timezone
 from django.urls import reverse
 
+from medicines.models import Medicine
+
 from .medicine_extraction import extract_medicine_names
 
 
@@ -40,6 +42,10 @@ DIAGNOSIS_PATTERN = re.compile(
 )
 DOSAGE_PATTERN = re.compile(
     r'(?i)\b\d+(?:\.\d+)?\s?(?:mcg|μg|µg|mg|g|ml|mL|units?)\b'
+)
+QUANTITY_PATTERNS = (
+    re.compile(r'(?i)\b(?:qty|quantity|dispense|no\.?\s+of\s+units)\s*[:#=-]?\s*(\d{1,4})\b'),
+    re.compile(r'(?i)\b(\d{1,4})\s*(?:tablets?|tabs?|capsules?|caps?|bottles?|sachets?)\b'),
 )
 
 
@@ -126,9 +132,86 @@ def extract_record_details(document_text):
     return {
         'medicines': medicines,
         'dosage_mentions': _extract_dosage_mentions(text, medicines),
+        'prescription_items': _extract_prescription_items(text, medicines),
         'test_values': _extract_test_values(text),
         'diagnosis_mentions': diagnoses,
         'dates': _extract_dates(text),
+    }
+
+
+def _extract_prescription_items(text, detections):
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    items = []
+    for detection in detections:
+        names = {
+            detection.get('name', ''),
+            detection.get('catalog_medicine', ''),
+        }
+        matching_lines = [
+            line for line in lines
+            if any(name and name.casefold() in line.casefold() for name in names)
+        ]
+        source_line = matching_lines[0] if matching_lines else ''
+        quantities = []
+        for pattern in QUANTITY_PATTERNS:
+            match = pattern.search(source_line)
+            if match:
+                quantities.append(match.group(1))
+        item = {
+            'recognized_text': detection.get('name', ''),
+            'catalog_medicine': detection.get('catalog_medicine', ''),
+            'match_type': detection.get('match_type', ''),
+            'match_basis': 'exact normalized catalog name/ingredient match',
+            'source_line': source_line[:300],
+            'strength_mentions': DOSAGE_PATTERN.findall(source_line)[:10],
+            'quantity_as_written': quantities[0] if quantities else '',
+            'quantity_source': source_line[:300] if quantities else '',
+            'dosage_instructions_as_written': source_line[:300],
+            'dosage_source': source_line[:300],
+            'composition_verified': bool(detection.get('composition_verified')),
+            'composition': [],
+            'catalog_source_name': detection.get('source_name', ''),
+            'catalog_source_url': detection.get('source_url', ''),
+            'review_status': 'needs human verification',
+        }
+        if item['composition_verified']:
+            medicine = Medicine.objects.filter(
+                name=detection.get('catalog_medicine', ''),
+                safety_data_verified=True,
+            ).prefetch_related('ingredients').first()
+            if medicine and medicine.has_verified_composition:
+                for ingredient in medicine.ingredients.all().order_by('standard_name'):
+                    composition = medicine.medicineingredient_set.get(ingredient=ingredient)
+                    item['composition'].append({
+                        'ingredient_name': ingredient.name,
+                        'standard_name': ingredient.standard_name,
+                        'strength': f'{composition.strength} {composition.unit}'.strip(),
+                        'source_name': ingredient.source_name,
+                        'source_url': ingredient.source_url,
+                    })
+        items.append(item)
+    return items
+
+
+def build_prescription_soft_copy(document):
+    details = document.extracted_details or {}
+    items = details.get('prescription_items')
+    if items is None:
+        details = extract_record_details(document.extracted_text)
+        items = details.get('prescription_items', [])
+
+    return {
+        'document': document,
+        'items': items,
+        'source_text': document.extracted_text,
+        'reviewed_medicines': document.reviewed_medicines,
+        'created_at': document.created_at,
+        'limitations': (
+            'This is an OCR-assisted transcription, not a new prescription or medical recommendation. '
+            'OCR may misread handwriting. Blank fields mean no clear value was extracted; do not infer them. '
+            'Catalog ingredients are displayed only when composition and sources are verified. '
+            'Confirm the original with the prescriber or pharmacist before acting.'
+        ),
     }
 
 
