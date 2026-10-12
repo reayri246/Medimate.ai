@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Prescription records | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">{% if summary_language == 'te' %}వైద్య రికార్డులు మరియు ప్రిస్క్రిప్షన్‌లు{% else %}Health records and prescriptions{% endif %}</h2>
+    <a href="{% url 'prescription_upload' %}" class="btn btn-primary">Upload document</a>
+  </div>
+  <div class="d-flex gap-2 align-items-center mb-3">
+    <span>{% if summary_language == 'te' %}భాష{% else %}Language{% endif %}:</span>
+    <a href="?lang=en" lang="en">English</a>
+    <a href="?lang=te" lang="te">తెలుగు</a>
+  </div>
+
+  {% if documents %}
+    {% for document in documents %}
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-1">{{ document.title }}</h5>
+            <span class="badge bg-light text-dark">{{ document.get_review_status_display }}</span>
+          </div>
+          <p class="text-secondary mb-2">{{ document.get_document_type_display }} · Uploaded {{ document.created_at|date:"M d, Y" }}</p>
+          <section class="alert alert-info py-2" lang="{{ summary_language }}">
+            {% if summary_language == 'te' %}
+              <strong>సులభమైన సారాంశం:</strong>
+              చదవగలిగిన పాఠ్యంలో కనిపించిన మందుల పేర్లు, మోతాదు వాక్యాలు, పరీక్ష విలువలు, తేదీలు మరియు నిర్ధారణగా లేబుల్ చేసిన వాక్యాలను మాత్రమే ఈ వ్యవస్థ గుర్తిస్తుంది. అదే పంక్తిలో ముద్రించిన పరీక్ష పరిధి ఉంటే దానితో విలువను పోల్చి చూపవచ్చు; ఇది వ్యాధి నిర్ధారణ లేదా వైద్య అర్థం కాదు.
+            {% else %}
+              <strong>Plain-language summary:</strong>
+              This tool finds possible medicine names, dosage text, test values, dates, and text explicitly labeled as a diagnosis. If a reference range is printed on the same line, it may compare the value with that range. OCR can be wrong, and this is not a diagnosis or clinical interpretation.
+            {% endif %}
+          </section>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <h6>{% if summary_language == 'te' %}సాధ్యమైన మోతాదు వాక్యాలు{% else %}Possible dosage text{% endif %}</h6>
+              {% if document.extracted_details.dosage_mentions %}
+                <ul class="mb-0">
+                  {% for item in document.extracted_details.dosage_mentions %}
+                    <li><strong>{{ item.medicine }}</strong>: “{{ item.text }}”</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-secondary mb-0">{% if summary_language == 'te' %}గుర్తించబడలేదు{% else %}None detected{% endif %}</p>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <h6>{% if summary_language == 'te' %}సాధ్యమైన పరీక్ష విలువలు{% else %}Possible test values{% endif %}</h6>
+              {% if document.extracted_details.test_values %}
+                <ul class="mb-0">
+                  {% for item in document.extracted_details.test_values %}
+                    <li>
+                      {{ item.name }}: {{ item.value }} {{ item.unit }}
+                      {% if item.printed_reference_range %}
+                        <small class="text-secondary">
+                          ({% if summary_language == 'te' %}పత్రంలో ముద్రించిన పరిధి{% else %}range printed on report{% endif %}: {{ item.printed_reference_range }} {{ item.unit }})
+                        </small>
+                        {% if item.range_comparison == 'below' %}
+                          <span class="small text-warning">{% if summary_language == 'te' %}ఈ విలువ పత్రంలో ముద్రించిన పరిధి కంటే తక్కువగా ఉంది; వైద్య నిపుణుడిని సంప్రదించండి.{% else %}This value is below the interval printed on the report; ask your clinician to interpret it.{% endif %}</span>
+                        {% elif item.range_comparison == 'above' %}
+                          <span class="small text-warning">{% if summary_language == 'te' %}ఈ విలువ పత్రంలో ముద్రించిన పరిధి కంటే ఎక్కువగా ఉంది; వైద్య నిపుణుడిని సంప్రదించండి.{% else %}This value is above the interval printed on the report; ask your clinician to interpret it.{% endif %}</span>
+                        {% elif item.range_comparison == 'within' %}
+                          <span class="small text-secondary">{% if summary_language == 'te' %}ఈ విలువ పత్రంలో ముద్రించిన పరిధిలో ఉంది; ఇది ఆరోగ్య నిర్ధారణ కాదు.{% else %}This value is within the interval printed on the report; this is not a health assessment.{% endif %}</span>
+                        {% endif %}
+                      {% endif %}
+                      <small class="text-secondary">({{ item.source_text }})</small>
+                    </li>
+                  {% endfor %}
+                </ul>
+                <small class="text-secondary">{% if summary_language == 'te' %}విలువల సాధారణ పరిధులు ప్రయోగశాల మరియు వ్యక్తి ఆధారంగా మారుతాయి.{% else %}Reference ranges vary by laboratory and individual.{% endif %}</small>
+              {% else %}
+                <p class="text-secondary mb-0">{% if summary_language == 'te' %}గుర్తించబడలేదు{% else %}None detected{% endif %}</p>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <h6>{% if summary_language == 'te' %}నిర్ధారణగా లేబుల్ చేసిన పాఠ్యం{% else %}Text labeled as a diagnosis{% endif %}</h6>
+              {% if document.extracted_details.diagnosis_mentions %}
+                <ul class="mb-0">
+                  {% for item in document.extracted_details.diagnosis_mentions %}
+                    <li>{{ item.label }}: {{ item.text }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-secondary mb-0">{% if summary_language == 'te' %}గుర్తించబడలేదు{% else %}None detected{% endif %}</p>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <h6>{% if summary_language == 'te' %}గుర్తించిన తేదీలు{% else %}Dates found{% endif %}</h6>
+              {% if document.extracted_details.dates %}
+                <ul class="mb-0">{% for date in document.extracted_details.dates %}<li>{{ date }}</li>{% endfor %}</ul>
+              {% else %}
+                <p class="text-secondary mb-0">{% if summary_language == 'te' %}గుర్తించబడలేదు{% else %}None detected{% endif %}</p>
+              {% endif %}
+            </div>
+          </div>
+          <p class="mb-2">{{ document.extracted_text|truncatechars:220 }}</p>
+          <section class="prescription-detections mb-3" aria-label="Medicine names detected in the uploaded text">
+            <h6 class="mb-2">{% if summary_language == 'te' %}చదవగలిగిన పాఠ్యంలో కనిపించిన సాధ్యమైన మందుల పేర్లు{% else %}Possible medicine names found in readable text{% endif %}</h6>
+            {% if document.extracted_medicines %}
+              <ul class="mb-2">
+                {% for item in document.extracted_medicines %}
+                  <li>
+                    <strong>{{ item.name }}</strong>
+                    <small class="text-secondary"> — exact {{ item.match_type }} catalog-name match; this does not verify what the handwriting says. Catalog composition {% if item.composition_verified %}verified{% else %}not verified{% endif %}</small>
+                    {% if item.composition_verified and item.source_url %}
+                      <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">Source</a>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-secondary mb-0">{% if summary_language == 'te' %}కేటలాగ్‌లోని మందు లేదా పదార్థం గుర్తించబడలేదు. ప్రిస్క్రిప్షన్‌లో మందులు లేవని దీని అర్థం కాదు.{% else %}No catalog medicine or ingredient names were recognized. This does not confirm that the prescription contains no medicines.{% endif %}</p>
+            {% endif %}
+            <p class="small text-secondary mb-0">{% if summary_language == 'te' %}OCR మరియు పాఠ్య సరిపోలిక పేర్లను మిస్ చేయవచ్చు లేదా తప్పుగా చదవవచ్చు. అసలు పత్రంతో లేదా ఫార్మసిస్ట్/వైద్య నిపుణుడితో ప్రతి పేరును నిర్ధారించండి. మందులు ప్రారంభించడానికి లేదా మార్చడానికి ఈ ఫలితాలను ఉపయోగించవద్దు.{% else %}OCR and text matching can miss or misread names, especially in handwriting or poor-quality scans. Confirm every name against the original prescription or with a pharmacist/clinician. Do not use this extraction to take or change medicines.{% endif %}</p>
+          </section>
+          {% if document.reviewed_medicines %}
+            <section class="mb-3">
+              <h6>Patient-reviewed fields (kept separate from OCR output)</h6>
+              <ul>
+                {% for item in document.reviewed_medicines %}
+                  <li>
+                    {{ item.recognized_text|default:"Unreadable" }}
+                    {% if item.catalog_medicine_name %} — selected catalog entry: {{ item.catalog_medicine_name }}{% endif %}
+                    {% if item.strength_as_written %} — strength as written: {{ item.strength_as_written }}{% endif %}
+                    {% if item.instructions_as_written %} — instructions as written: {{ item.instructions_as_written }}{% endif %}
+                    ({{ item.verification_status }})
+                  </li>
+                {% endfor %}
+              </ul>
+              <p class="small text-secondary mb-0">Reviewed by you{% if document.reviewed_at %} on {{ document.reviewed_at|date:"M j, Y · g:i A" }}{% endif %}. This is not professional verification.</p>
+            </section>
+          {% endif %}
+          <a href="{% url 'document_review' document.id %}" class="btn btn-primary btn-sm">Review or correct extracted fields</a>
+          <a href="{% url 'document_download' document.id %}" class="btn btn-outline-primary btn-sm">{% if summary_language == 'te' %}అసలు పత్రాన్ని డౌన్‌లోడ్ చేయండి{% else %}Download original{% endif %}</a>
+          <a href="{% url 'document_fhir_export' document.id %}" class="btn btn-outline-secondary btn-sm">{% if summary_language == 'te' %}FHIR-శైలి JSON ఎగుమతి{% else %}Export FHIR-style JSON{% endif %}</a>
+          <p class="small text-secondary mt-2 mb-0">FHIR-shaped demo export only; it is not an ABDM/ABHA connection or certified clinical record. Review OCR-derived fields before sharing.</p>
+        </div>
+      </div>
+    {% endfor %}
+    {% if documents.has_other_pages %}
+      <nav aria-label="Prescription record pages" class="d-flex justify-content-between mb-4">
+        {% if documents.has_previous %}
+          <a class="btn btn-outline-secondary btn-sm" href="?page={{ documents.previous_page_number }}&amp;lang={{ summary_language }}">Previous</a>
+        {% else %}<span></span>{% endif %}
+        <span class="text-secondary">Page {{ documents.number }} of {{ documents.paginator.num_pages }}</span>
+        {% if documents.has_next %}
+          <a class="btn btn-outline-secondary btn-sm" href="?page={{ documents.next_page_number }}&amp;lang={{ summary_language }}">Next</a>
+        {% else %}<span></span>{% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="alert alert-info">No uploaded prescriptions or reports yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Review extracted prescription | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+  <a href="{% url 'prescription_list' %}" class="btn btn-link px-0">&larr; Back to records</a>
+  <h1 class="h2">Review extracted information</h1>
+  <p class="text-secondary">{{ document.title }} · {{ document.get_document_type_display }}</p>
+  <div class="alert alert-warning">
+    Compare each field with the original document. Extracted values are not a prescription or treatment recommendation. Do not infer missing strength or instructions. Patient confirmation is not pharmacist or clinician verification.
+  </div>
+
+  <section class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h2 class="h5">Original OCR text</h2>
+      <pre class="text-wrap mb-0">{{ document.extracted_text }}</pre>
+    </div>
+  </section>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+      <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
+    {% endif %}
+    {% for form in formset %}
+      <section class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          <h2 class="h5">Medicine candidate {{ forloop.counter }}</h2>
+          {{ form.non_field_errors }}
+          <div class="row g-3">
+            {% for field in form %}
+              <div class="col-md-6">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+    {% empty %}
+      <div class="alert alert-info">No catalog-matched medicine candidates were detected. Review the original document; no medicine was inferred.</div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Save my review</button>
+  </form>
+</div>
+{% endblock %}

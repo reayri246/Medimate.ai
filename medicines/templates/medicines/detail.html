@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ medicine.name }} | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="row mt-4 justify-content-center">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="mb-0">{{ medicine.name }}</h2>
+          {% if medicine.has_verified_composition %}
+            <p class="text-secondary mb-0">
+              {% for ingredient in medicine.ingredients.all %}{{ ingredient.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </p>
+          {% else %}
+            <p class="text-secondary mb-0">Demonstration entry — not verified</p>
+          {% endif %}
+        </div>
+        <span class="badge bg-primary-subtle text-primary">{{ medicine.category }}</span>
+      </div>
+      {% if medicine.has_verified_composition %}
+        <p>{{ medicine.description }}</p>
+        <dl class="row">
+          <dt class="col-sm-4">Form</dt><dd class="col-sm-8">{{ medicine.dosage_form }}</dd>
+          <dt class="col-sm-4">Strength</dt><dd class="col-sm-8">{{ medicine.strength|default:'Not specified' }}</dd>
+        </dl>
+        <h5>Warnings</h5>
+        <p>{{ medicine.warnings|default:'Verified warning information unavailable.' }}</p>
+        <h5>Side effects</h5>
+        <p>{{ medicine.side_effects|default:'Verified side-effect information unavailable.' }}</p>
+        <h5>Interactions</h5>
+        <p>Interaction information could not be verified. Please consult a pharmacist or doctor.</p>
+        <h5>Contraindications</h5>
+        <p>{{ medicine.contraindications|default:'Verified contraindication information unavailable.' }}</p>
+        <h5>Verified active ingredients</h5>
+        <ul>
+          {% for ingredient in medicine.ingredients.all %}
+            <li>{{ ingredient.name }} (standard name: {{ ingredient.standard_name }}) — {{ ingredient.source_name }}{% if ingredient.last_verified %}, verified {{ ingredient.last_verified|date:"Y-m-d" }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+        <p><strong>Product information source:</strong> <a href="{{ medicine.source_url }}" target="_blank" rel="noopener noreferrer">{{ medicine.source_name }}</a>. Last verified {{ medicine.last_verified|date:"Y-m-d" }}.</p>
+      {% else %}
+        <div class="alert alert-warning">Verified ingredient composition and safety sources are unavailable. Details for this entry are not shown; do not rely on it for a medicine safety decision.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Health profile | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <p class="eyebrow mb-1">YOUR PRIVATE HEALTH RECORD</p>
+      <h1 class="h2 mb-1">Health profile &amp; timeline</h1>
+      <p class="text-secondary mb-0">A chronological view of your uploaded records, measurements, appointments, and activity.</p>
+    </div>
+    <a href="{% url 'prescription_upload' %}" class="btn btn-primary">Add a health record</a>
+  </div>
+
+  <section class="dashboard-panel mb-4">
+    <div class="panel-heading">
+      <div>
+        <h2>Patient profile</h2>
+        <p>FHIR-style identifiers are for demonstration only.</p>
+      </div>
+    </div>
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Name</dt>
+      <dd class="col-sm-9">{{ request.user.get_full_name|default:request.user.username }}</dd>
+      {% if demo_abha_id %}
+        <dt class="col-sm-3">Fictional demo ABHA-style ID</dt>
+        <dd class="col-sm-9"><code>{{ demo_abha_id }}</code></dd>
+      {% endif %}
+    </dl>
+    <p class="alert alert-warning mt-3 mb-0">
+      This is not a real ABHA ID, and the app is not connected to ABDM. No health data is being shared with ABDM.
+    </p>
+  </section>
+
+  <section class="dashboard-panel">
+    <div class="panel-heading">
+      <div><h2>Unified health timeline</h2><p>Most recent activity first</p></div>
+    </div>
+    {% if timeline %}
+      <div class="list-group list-group-flush">
+        {% for item in timeline %}
+          <article class="list-group-item px-0">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <div>
+                <span class="badge bg-light text-dark me-2">{{ item.kind }}</span>
+                <strong>{{ item.title }}</strong>
+                {% if item.detail %}<p class="text-secondary mb-0 mt-1">{{ item.detail|truncatechars:240 }}</p>{% endif %}
+              </div>
+              <time class="text-secondary">{{ item.timestamp|date:"M j, Y · g:i A" }}</time>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-secondary mb-0">Your health timeline is empty. Add a measurement or upload a record to get started.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

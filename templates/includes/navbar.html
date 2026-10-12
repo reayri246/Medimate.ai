@@ -1,0 +1,46 @@
+<aside class="app-sidebar">
+  <div class="sidebar-heading">
+    <a class="sidebar-brand" href="{% url 'home' %}">
+      <span class="brand-symbol"><i class="bi bi-heart-pulse-fill"></i></span>
+      <span><strong>MediMate AI</strong><small>Your Personal AI Health Copilot</small></span>
+    </a>
+  </div>
+
+  <nav id="sidebarNavigation" class="sidebar-navigation collapse">
+    {% if user.is_authenticated %}
+      <span class="sidebar-label">Workspace</span>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'dashboard' %} is-active{% endif %}" href="{% url 'dashboard' %}"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'health_profile' %} is-active{% endif %}" href="{% url 'health_profile' %}"><i class="bi bi-person-vcard"></i><span>Health profile & timeline</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'guard_home' %} is-active{% endif %}" href="{% url 'guard_home' %}"><i class="bi bi-clipboard2-pulse"></i><span>Symptom checker</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'medicine_list' or request.resolver_match.url_name == 'medicine_detail' %} is-active{% endif %}" href="{% url 'medicine_list' %}"><i class="bi bi-search"></i><span>Medicine finder</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'medicine_compare' %} is-active{% endif %}" href="{% url 'medicine_compare' %}"><i class="bi bi-shield-check"></i><span>Safety checker</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'assistant_home' %} is-active{% endif %}" href="{% url 'assistant_home' %}"><i class="bi bi-chat-square-text"></i><span>Health assistant</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'prescription_list' or request.resolver_match.url_name == 'prescription_upload' %} is-active{% endif %}" href="{% url 'prescription_list' %}"><i class="bi bi-file-earmark-medical"></i><span>Prescriptions</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'record_list' %} is-active{% endif %}" href="{% url 'record_list' %}"><i class="bi bi-folder2-open"></i><span>Medical records</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'tracking_home' %} is-active{% endif %}" href="{% url 'tracking_home' %}"><i class="bi bi-heart-pulse"></i><span>Health tracking</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'notification_list' %} is-active{% endif %}" href="{% url 'notification_list' %}"><i class="bi bi-bell"></i><span>Reminders</span></a>
+      <a class="sidebar-link{% if request.resolver_match.url_name == 'appointment_list' %} is-active{% endif %}" href="{% url 'appointment_list' %}"><i class="bi bi-calendar2-check"></i><span>Appointments</span></a>
+      {% if user.is_staff %}
+        <a class="sidebar-link" href="{% url 'admin:index' %}"><i class="bi bi-gear"></i><span>Administration</span></a>
+      {% endif %}
+      <span class="sidebar-label mt-3">Account</span>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="sidebar-link sidebar-button" type="submit"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button>
+      </form>
+    {% else %}
+      <span class="sidebar-label">Explore</span>
+      <a class="sidebar-link" href="{% url 'home' %}#features"><i class="bi bi-stars"></i><span>Features</span></a>
+      <a class="sidebar-link" href="{% url 'home' %}#how-it-works"><i class="bi bi-signpost-2"></i><span>How it works</span></a>
+      <a class="sidebar-link" href="{% url 'home' %}#about"><i class="bi bi-info-circle"></i><span>About</span></a>
+      <span class="sidebar-label mt-3">Account</span>
+      <a class="sidebar-link" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i><span>Login</span></a>
+      <a class="sidebar-link sidebar-link-primary" href="{% url 'register' %}"><i class="bi bi-person-plus"></i><span>Get started</span></a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-promo">
+    <div class="sidebar-promo-icon"><i class="bi bi-heart-pulse"></i></div>
+    <strong>Better Health<br>Brighter Tomorrow</strong>
+    <p>Track your health, manage your medicines, and get trusted information — all in one place.</p>
+  </div>
+</aside>

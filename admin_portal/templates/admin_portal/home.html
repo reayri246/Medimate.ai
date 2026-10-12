@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin portal | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+  <h2>Admin portal</h2>
+  <div class="row g-4 mt-1">
+    <div class="col-md-3"><div class="dashboard-card"><div class="text-secondary small">Users</div><h3>{{ stats.users }}</h3></div></div>
+    <div class="col-md-3"><div class="dashboard-card"><div class="text-secondary small">Appointments</div><h3>{{ stats.appointments }}</h3></div></div>
+    <div class="col-md-3"><div class="dashboard-card"><div class="text-secondary small">Health readings</div><h3>{{ stats.measurements }}</h3></div></div>
+    <div class="col-md-3"><div class="dashboard-card"><div class="text-secondary small">Documents</div><h3>{{ stats.documents }}</h3></div></div>
+  </div>
+</div>
+{% endblock %}

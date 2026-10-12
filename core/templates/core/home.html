@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}MediMate AI | Your Personal AI Health Copilot{% endblock %}
+
+{% block content %}
+<section class="hero my-4">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <span class="badge text-bg-light text-primary mb-3">Local, rule-based symptom guide</span>
+        <h1 class="hero-title">Cautious health information, on your device</h1>
+        <p class="lead text-secondary mt-3">
+          Review health records, track care, and share symptom details with a local guide. It can offer basic safety information but does not diagnose illness or recommend medicines.
+        </p>
+        <div class="d-flex gap-3 mt-4 flex-wrap">
+          <a class="btn btn-primary btn-lg" href="{% url 'register' %}">Get Started</a>
+          <a class="btn btn-outline-primary btn-lg" href="{% url 'guard_home' %}">Try symptom guide</a>
+          <a class="btn btn-outline-primary btn-lg" href="#features">Explore Features</a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="dashboard-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Care snapshot</h5>
+            <span class="badge bg-success-subtle text-success badge-pill">Protected</span>
+          </div>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center"><span>Medication checks</span><strong>Rule-based</strong></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center"><span>Document review</span><strong>OCR ready</strong></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center"><span>Appointment tracking</span><strong>Live</strong></li>
+            <li class="list-group-item d-flex justify-content-between align-items-center"><span>Safety disclaimer</span><strong>Required</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <p class="text-uppercase text-primary fw-semibold mb-2">Features</p>
+      <h2 class="section-title">Everything for a healthier care routine</h2>
+    </div>
+    <div class="row g-4">
+      {% for feature in features %}
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card h-100">
+          <div class="icon-wrap mb-3"><i class="bi {{ feature.icon }}"></i></div>
+          <h4>{{ feature.title }}</h4>
+          <p class="text-secondary mb-0">{{ feature.description }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works" class="py-5 bg-white">
+  <div class="container">
+    <div class="text-center mb-5">
+      <p class="text-uppercase text-primary fw-semibold mb-2">How it works</p>
+      <h2 class="section-title">A simple three-step health workflow</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="feature-card text-center h-100">
+          <div class="icon-wrap mx-auto mb-3"><span>1</span></div>
+          <h4>Upload and review</h4>
+          <p class="text-secondary mb-0">Import prescriptions, lab reports, or notes and extract key text for review.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card text-center h-100">
+          <div class="icon-wrap mx-auto mb-3"><span>2</span></div>
+          <h4>Check risks</h4>
+          <p class="text-secondary mb-0">Search the medicine catalog and compare source-verified active ingredients for possible duplicates.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="feature-card text-center h-100">
+          <div class="icon-wrap mx-auto mb-3"><span>3</span></div>
+          <h4>Track and plan</h4>
+          <p class="text-secondary mb-0">Monitor health measurements, upcoming appointments, and personal records from one dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6">
+        <p class="text-uppercase text-primary fw-semibold mb-2">Local symptom guide</p>
+        <h2 class="section-title">Cautious, rule-based health information</h2>
+        <p class="text-secondary">
+          This local tool asks about symptoms, duration, and severity, then offers basic safety and prevention guidance. It does not diagnose illness or recommend medicines. It is not a substitute for clinician judgment and flags some situations that may need urgent care.
+        </p>
+      </div>
+      <div class="col-lg-6">
+        <div class="dashboard-card p-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="icon-wrap"><i class="bi bi-shield-fill-check"></i></div>
+            <div>
+              <h5 class="mb-0">Safety posture</h5>
+              <small>Focused on awareness and escalation</small>
+            </div>
+          </div>
+          <div class="alert alert-warning mb-2"><strong>Important:</strong> Always confirm red-flag symptoms with a qualified clinician or emergency service.</div>
+          <div class="alert alert-success mb-0"><strong>Responsible use:</strong> The system supports decision-making but cannot diagnose every condition.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="py-5 bg-white">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <p class="text-uppercase text-primary fw-semibold mb-2">Privacy & security</p>
+        <h2 class="section-title">Your health data stays in your control</h2>
+        <p class="text-secondary">
+          MediMate AI keeps records, uploads, and notes in a secure, private application environment. Information is organized for personal care management and review, not for replacement of licensed medical care.
+        </p>
+      </div>
+      <div class="col-lg-6">
+        <div class="dashboard-card p-4">
+          <h5>Responsible-use disclaimer</h5>
+          <p class="text-secondary mb-0">
+            This application is not a physician, pharmacist, or emergency service. It is built for personal organization, safety awareness, and informed discussion with healthcare professionals.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

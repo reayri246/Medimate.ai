@@ -1,0 +1,24 @@
+<header class="app-topbar">
+  <button class="mobile-sidebar-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarNavigation" aria-controls="sidebarNavigation" aria-expanded="false" aria-label="Open navigation">
+    <i class="bi bi-list"></i>
+  </button>
+  <form class="topbar-search" method="get" action="{% url 'medicine_list' %}" role="search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="search" name="query" placeholder="Search medicines or active ingredients..." aria-label="Search medicines or active ingredients">
+    <button type="submit" class="visually-hidden">Search</button>
+  </form>
+  {% if user.is_authenticated %}
+    <a class="topbar-icon-link" href="{% url 'notification_list' %}" aria-label="Notifications">
+      <i class="bi bi-bell"></i>
+      {% if unread_notifications %}<span class="notification-dot">{{ unread_notifications }}</span>{% endif %}
+    </a>
+    <div class="topbar-divider"></div>
+    <a class="topbar-profile" href="{% url 'dashboard' %}">
+      <span class="profile-avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+      <span class="profile-copy"><strong>{{ user.get_full_name|default:user.username }}</strong><small>{{ user.get_role_display|default:'Patient' }}</small></span>
+      <i class="bi bi-chevron-down"></i>
+    </a>
+  {% else %}
+    <a class="btn btn-primary btn-sm" href="{% url 'login' %}">Sign in</a>
+  {% endif %}
+</header>

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload document | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 p-4">
+      <h2 class="mb-3">Upload a prescription or medical report</h2>
+      <p class="text-secondary">Readable text is processed locally. Choose Telugu + English for bilingual image OCR if the Telugu Tesseract language pack is installed.</p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.title.id_for_label }}">Document title</label>
+          {{ form.title }}
+          {{ form.title.errors }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.document_type.id_for_label }}">Record type</label>
+          {{ form.document_type }}
+          {{ form.document_type.errors }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.file.id_for_label }}">Prescription, lab report, discharge summary, or diagnostic record</label>
+          {{ form.file }}
+          {{ form.file.errors }}
+        </div>
+        <div class="mb-3" lang="te">
+          <label class="form-label" for="{{ form.ocr_language.id_for_label }}">పత్రం OCR భాష / Document OCR language</label>
+          {{ form.ocr_language }}
+          <div class="form-text">{{ form.ocr_language.help_text }}</div>
+          {{ form.ocr_language.errors }}
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | MediMate AI{% endblock %}
+
+{% block content %}
+<section class="dashboard-welcome">
+  <div>
+    <p class="eyebrow mb-1">YOUR HEALTH OVERVIEW</p>
+    <h1>Good morning, {{ user.first_name|default:user.username }}!</h1>
+    <p class="text-secondary mb-0">Your health matters. Stay informed, stay safe.</p>
+  </div>
+  <div class="today-chip">
+    <i class="bi bi-calendar3"></i>
+    <span><small>Today</small><strong>{% now "M j, Y" %}</strong></span>
+  </div>
+</section>
+
+<div class="row g-3 dashboard-shortcuts">
+  <div class="col-6 col-lg-3">
+    <a href="{% url 'guard_home' %}" class="shortcut-card">
+      <span class="shortcut-icon shortcut-mint"><i class="bi bi-clipboard2-pulse"></i></span>
+      <strong>Symptom checker</strong>
+      <span>Check symptoms and get general guidance</span>
+      <i class="bi bi-arrow-right-circle shortcut-arrow"></i>
+    </a>
+  </div>
+  <div class="col-6 col-lg-3">
+    <a href="{% url 'medicine_list' %}" class="shortcut-card">
+      <span class="shortcut-icon shortcut-blue"><i class="bi bi-capsule"></i></span>
+      <strong>Medicine finder</strong>
+      <span>Search the medicine information catalog</span>
+      <i class="bi bi-arrow-right-circle shortcut-arrow"></i>
+    </a>
+  </div>
+  <div class="col-6 col-lg-3">
+    <a href="{% url 'medicine_compare' %}" class="shortcut-card">
+      <span class="shortcut-icon shortcut-amber"><i class="bi bi-shield-check"></i></span>
+      <strong>Safety checker</strong>
+      <span>Compare verified ingredient records</span>
+      <i class="bi bi-arrow-right-circle shortcut-arrow"></i>
+    </a>
+  </div>
+  <div class="col-6 col-lg-3">
+    <a href="{% url 'assistant_home' %}" class="shortcut-card">
+      <span class="shortcut-icon shortcut-purple"><i class="bi bi-chat-square-text"></i></span>
+      <strong>Health assistant</strong>
+      <span>Ask general health information questions</span>
+      <i class="bi bi-arrow-right-circle shortcut-arrow"></i>
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 dashboard-grid">
+  <div class="col-lg-8">
+    <section class="dashboard-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Health measurements</h2>
+          <p>Recent measurements you've recorded</p>
+        </div>
+        <a href="{% url 'tracking_home' %}" class="panel-link">View details <i class="bi bi-arrow-up-right"></i></a>
+      </div>
+      {% if measurements %}
+        <div class="chart-legend">
+          <span><i class="legend-dot legend-teal"></i> Systolic blood pressure (mmHg)</span>
+          <span><i class="legend-dot legend-blue"></i> Heart rate (bpm)</span>
+        </div>
+        <div class="measurement-chart-wrap">
+          <canvas id="measurementChart" role="img" aria-label="Chart of recent recorded systolic blood pressure and heart rate"></canvas>
+        </div>
+        {{ chart_data|json_script:"measurement-chart-data" }}
+      {% else %}
+        <div class="empty-panel">
+          <i class="bi bi-activity"></i>
+          <p>No measurements recorded yet.</p>
+          <a href="{% url 'tracking_home' %}" class="btn btn-outline-primary btn-sm">Add a measurement</a>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="col-lg-4">
+    <section class="dashboard-panel health-snapshot">
+      <div class="panel-heading">
+        <div>
+          <h2>Health snapshot</h2>
+          <p>Your care at a glance</p>
+        </div>
+        <a href="{% url 'tracking_home' %}" class="panel-link">Details</a>
+      </div>
+      <div class="snapshot-grid">
+        <a href="{% url 'tracking_home' %}" class="snapshot-tile">
+          <span class="snapshot-icon shortcut-mint"><i class="bi bi-activity"></i></span>
+          <span><small>Measurements</small><strong>{{ total_measurements }}</strong><em>total recorded</em></span>
+        </a>
+        <a href="{% url 'notification_list' %}" class="snapshot-tile">
+          <span class="snapshot-icon shortcut-amber"><i class="bi bi-alarm"></i></span>
+          <span><small>Reminders</small><strong>{{ unread_notifications }}</strong><em>unread</em></span>
+        </a>
+        <a href="{% url 'appointment_list' %}" class="snapshot-tile">
+          <span class="snapshot-icon shortcut-blue"><i class="bi bi-calendar2-check"></i></span>
+          <span><small>Appointments</small><strong>{{ total_appointments }}</strong><em>total scheduled</em></span>
+        </a>
+        <a href="{% url 'record_list' %}" class="snapshot-tile">
+          <span class="snapshot-icon shortcut-purple"><i class="bi bi-folder2-open"></i></span>
+          <span><small>Medical records</small><strong>{{ total_medical_records }}</strong><em>saved records</em></span>
+        </a>
+      </div>
+      {% if recent_measurement %}
+        <div class="latest-reading">
+          <strong>Latest measurement</strong>
+          <small>{{ recent_measurement.date|date:"M j, Y" }}</small>
+          <div>
+            {% if recent_measurement.blood_pressure %}<span>BP <b>{{ recent_measurement.blood_pressure }}</b></span>{% endif %}
+            {% if recent_measurement.heart_rate %}<span>Heart rate <b>{{ recent_measurement.heart_rate }} bpm</b></span>{% endif %}
+            {% if recent_measurement.weight_kg %}<span>Weight <b>{{ recent_measurement.weight_kg }} kg</b></span>{% endif %}
+            {% if recent_measurement.temperature_c %}<span>Temp <b>{{ recent_measurement.temperature_c }} °C</b></span>{% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<div class="row g-3 dashboard-grid">
+  <div class="col-lg-4">
+    <section class="dashboard-panel panel-list">
+      <div class="panel-heading">
+        <div><h2>Recent activity</h2><p>Your recent health updates</p></div>
+        <a href="{% url 'tracking_home' %}" class="panel-link">View all</a>
+      </div>
+      {% if measurements %}
+        {% for measurement in measurements|slice:":4" %}
+          <div class="activity-row">
+            <span class="activity-icon shortcut-mint"><i class="bi bi-heart-pulse"></i></span>
+            <span class="activity-copy"><strong>Health measurement recorded</strong><small>{{ measurement.date|date:"M j, Y" }}{% if measurement.blood_pressure %} · BP {{ measurement.blood_pressure }}{% endif %}{% if measurement.heart_rate %} · {{ measurement.heart_rate }} bpm{% endif %}</small></span>
+            <i class="bi bi-chevron-right activity-chevron"></i>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-copy">Your recorded measurements will appear here.</p>
+      {% endif %}
+      {% if notifications %}
+        {% for item in notifications|slice:":2" %}
+          <div class="activity-row">
+            <span class="activity-icon shortcut-purple"><i class="bi bi-bell"></i></span>
+            <span class="activity-copy"><strong>{{ item.title }}</strong><small>{{ item.created_at|date:"M j, Y · g:i A" }}</small></span>
+            <i class="bi bi-chevron-right activity-chevron"></i>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="col-lg-4">
+    <section class="dashboard-panel panel-list">
+      <div class="panel-heading">
+        <div><h2>Upcoming appointments</h2><p>Your planned care visits</p></div>
+        <a href="{% url 'appointment_list' %}" class="panel-link">View all</a>
+      </div>
+      {% if upcoming_appointments %}
+        {% for appointment in upcoming_appointments %}
+          <div class="appointment-row">
+            <span class="activity-icon shortcut-mint"><i class="bi bi-calendar2-check"></i></span>
+            <span class="activity-copy"><strong>{{ appointment.title }}</strong><small>{{ appointment.scheduled_at|date:"M j, Y · g:i A" }}</small></span>
+            <span class="status-pill">{{ appointment.get_status_display }}</span>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-panel compact"><i class="bi bi-calendar2"></i><p>No upcoming appointments.</p></div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="col-lg-4">
+    <section class="dashboard-panel panel-list">
+      <div class="panel-heading">
+        <div><h2>Recent medical records</h2><p>Your saved records and uploads</p></div>
+        <a href="{% url 'record_list' %}" class="panel-link">View all</a>
+      </div>
+      {% if medical_records %}
+        {% for record in medical_records %}
+          <div class="activity-row">
+            <span class="activity-icon shortcut-purple"><i class="bi bi-journal-medical"></i></span>
+            <span class="activity-copy"><strong>{{ record.title }}</strong><small>{{ record.get_record_type_display }} · {{ record.created_at|date:"M j, Y" }}</small></span>
+            <i class="bi bi-chevron-right activity-chevron"></i>
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% if documents %}
+        {% for document in documents %}
+          <div class="activity-row">
+            <span class="activity-icon shortcut-blue"><i class="bi bi-file-earmark-medical"></i></span>
+            <span class="activity-copy"><strong>{{ document.title }}</strong><small>{{ document.created_at|date:"M j, Y" }} · {{ document.get_review_status_display }}</small></span>
+            <i class="bi bi-chevron-right activity-chevron"></i>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-copy">No uploaded documents yet. <a href="{% url 'prescription_upload' %}">Upload a record</a></div>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<section class="dashboard-care-banner">
+  <span class="care-banner-icon"><i class="bi bi-flower1"></i></span>
+  <div><strong>Take care of your health</strong><p>Track, manage and stay informed with MediMate AI.</p></div>
+  <a href="{% url 'guard_home' %}" class="btn btn-primary">Start symptom check <i class="bi bi-arrow-right"></i></a>
+</section>
+{% endblock %}
