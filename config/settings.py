@@ -21,16 +21,27 @@ def env_list(name, default=''):
     return [value.strip() for value in os.getenv(name, default).split(',') if value.strip()]
 
 
-DEBUG = env_bool('DEBUG', not bool(os.getenv('RENDER_EXTERNAL_HOSTNAME')))
+IS_RENDER = env_bool('RENDER') or bool(os.getenv('RENDER_EXTERNAL_HOSTNAME'))
+DEBUG = env_bool('DEBUG', True) and not IS_RENDER
+DATABASE_URL = os.getenv('DATABASE_URL')
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     if not DEBUG:
         raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is False.')
     SECRET_KEY = secrets.token_urlsafe(64)
 
-ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
-CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS')
-USE_POSTGRES = env_bool('USE_POSTGRES', False)
+
+ALLOWED_HOSTS = env_list(
+    'ALLOWED_HOSTS',
+    'medimate-ai-mciq.onrender.com,localhost,127.0.0.1'
+)
+
+CSRF_TRUSTED_ORIGINS = env_list(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://medimate-ai-mciq.onrender.com'
+)
+
+USE_POSTGRES = env_bool('USE_POSTGRES', bool(DATABASE_URL or IS_RENDER))
 if not DEBUG and not USE_POSTGRES:
     raise ImproperlyConfigured('Set USE_POSTGRES=True for production deployments.')
 if not DEBUG:
@@ -38,12 +49,11 @@ if not DEBUG:
         raise ImproperlyConfigured('Set SECRET_KEY to a unique value of at least 50 characters.')
     if not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS:
         raise ImproperlyConfigured('Set explicit production domains in ALLOWED_HOSTS.')
-    database_url = os.getenv('DATABASE_URL')
     missing_database_settings = [
         name for name in ('DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST')
         if not os.getenv(name)
     ]
-    if not database_url and missing_database_settings:
+    if not DATABASE_URL and missing_database_settings:
         raise ImproperlyConfigured(
             'Set DATABASE_URL or all production database settings: '
             + ', '.join(missing_database_settings)
@@ -100,11 +110,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 if USE_POSTGRES:
-    database_url = os.getenv('DATABASE_URL')
-    if database_url:
+    if DATABASE_URL:
         DATABASES = {
             'default': dj_database_url.parse(
-                database_url,
+                DATABASE_URL,
                 conn_max_age=int(os.getenv('DB_CONN_MAX_AGE', '60')),
                 conn_health_checks=True,
                 ssl_require=not DEBUG,
