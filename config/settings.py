@@ -41,23 +41,20 @@ CSRF_TRUSTED_ORIGINS = env_list(
     'https://medimate-ai-mciq.onrender.com'
 )
 
-USE_POSTGRES = env_bool('USE_POSTGRES', bool(DATABASE_URL or IS_RENDER))
-if not DEBUG and not USE_POSTGRES:
-    raise ImproperlyConfigured('Set USE_POSTGRES=True for production deployments.')
+missing_database_settings = [
+    name for name in ('DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST')
+    if not os.getenv(name)
+]
+if not DATABASE_URL and missing_database_settings:
+    raise ImproperlyConfigured(
+        'PostgreSQL is required. Set DATABASE_URL or all database settings: '
+        + ', '.join(missing_database_settings)
+    )
 if not DEBUG:
     if len(SECRET_KEY) < 50 or SECRET_KEY == 'generate-a-unique-secret-before-production':
         raise ImproperlyConfigured('Set SECRET_KEY to a unique value of at least 50 characters.')
     if not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS:
         raise ImproperlyConfigured('Set explicit production domains in ALLOWED_HOSTS.')
-    missing_database_settings = [
-        name for name in ('DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST')
-        if not os.getenv(name)
-    ]
-    if not DATABASE_URL and missing_database_settings:
-        raise ImproperlyConfigured(
-            'Set DATABASE_URL or all production database settings: '
-            + ', '.join(missing_database_settings)
-        )
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -109,35 +106,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-if USE_POSTGRES:
-    if DATABASE_URL:
-        DATABASES = {
-            'default': dj_database_url.parse(
-                DATABASE_URL,
-                conn_max_age=int(os.getenv('DB_CONN_MAX_AGE', '60')),
-                conn_health_checks=True,
-                ssl_require=not DEBUG,
-            )
-        }
-    else:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.getenv('DB_NAME', ''),
-                'USER': os.getenv('DB_USER', ''),
-                'PASSWORD': os.getenv('DB_PASSWORD', ''),
-                'HOST': os.getenv('DB_HOST', ''),
-                'PORT': os.getenv('DB_PORT', '5432'),
-                'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '60')),
-                'CONN_HEALTH_CHECKS': True,
-                'OPTIONS': {'sslmode': os.getenv('DB_SSLMODE', 'require' if not DEBUG else 'prefer')},
-            }
-        }
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+    if DATABASES['default']['ENGINE'] != 'django.db.backends.postgresql':
+        raise ImproperlyConfigured('DATABASE_URL must point to a PostgreSQL database.')
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', ''),
+            'USER': os.getenv('DB_USER', ''),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', ''),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '60')),
+            'CONN_HEALTH_CHECKS': True,
+            'OPTIONS': {
+                'sslmode': os.getenv('DB_SSLMODE', 'require' if not DEBUG else 'prefer')
+            },
         }
     }
 

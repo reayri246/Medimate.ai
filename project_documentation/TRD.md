@@ -8,7 +8,7 @@ MediMate AI is a server-rendered Django application with app-based modules, rela
 
 - Python 3.12+
 - Django 5.2
-- SQLite for local development; PostgreSQL for configured production deployments
+- PostgreSQL for all environments
 - Django templates, Bootstrap 5.3, Bootstrap Icons, project CSS/JavaScript
 - pypdf for embedded PDF text; PyMuPDF for rendering scanned PDF pages
 - Pillow for image normalization; pytesseract/Tesseract for OCR
@@ -96,7 +96,7 @@ Extracted JSON is a prototype schema, not a normalized clinical terminology stor
 - Python 3.12+, requirements installation, migrations.
 - Tesseract executable required for image and scanned-PDF OCR.
 - `tel.traineddata` required for Telugu OCR; otherwise explicit English OCR fallback.
-- SQLite and local media are defaults for development only.
+- PostgreSQL is required in development and production.
 
 ### Production
 

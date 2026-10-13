@@ -39,17 +39,29 @@ An experimental CRNN was trained locally on 14 single-line crops from illustrati
 
 ## Local development on Windows
 
-Requirements: Python 3.12+, PostgreSQL only if you choose to use it locally, and Tesseract only for image OCR.
+Requirements: Python 3.12+, PostgreSQL, and Tesseract only for image OCR.
 
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 py -m pip install -r requirements.txt
 Copy-Item .env.example .env
+# Set DB_PASSWORD in .env to the password for your local PostgreSQL user.
 py manage.py migrate
 py manage.py seed_data
 py manage.py runserver
 ```
+
+PostgreSQL is required for local development and production. Configure either `DATABASE_URL` or `DB_NAME`, `DB_USER`, `DB_PASSWORD`, and `DB_HOST` in `.env`; SQLite is not used.
+
+To import an existing `db.sqlite3` into a **new, migrated, empty PostgreSQL database**, first back up both databases and configure `.env` for the PostgreSQL target. Then run:
+
+```powershell
+py manage.py migrate
+py manage.py migrate_sqlite_to_postgres --source db.sqlite3 --yes
+```
+
+The importer refuses to load into a PostgreSQL database that already contains application data. It copies database records only; copy the referenced files from `media` to the configured persistent media storage separately. Keep the SQLite database and its backup until the PostgreSQL deployment has been verified. Review and remove illustrative/demo records before importing into a live environment.
 
 Open `http://127.0.0.1:8000/`. The development-only sample account created by `seed_data` is Devashish (username `demo_patient`, password `demo12345`). The command adds clearly labeled sample measurements, upcoming appointments, recent activity, and medical records, as well as unverified medicine placeholders. All health values and records are illustrative only; placeholders are not suitable for medical decisions. It is idempotent and does not overwrite existing medicine entries. Never seed sample data in a live environment; the command refuses when `DEBUG=False`.
 
@@ -75,7 +87,7 @@ This uses Waitress, a Windows-compatible WSGI server. It does not configure prod
 
 This is a Django project; its WSGI application is `config.wsgi:application` (not `app:app`). The included [render.yaml](./render.yaml) defines the correct Gunicorn command, binds to Render's assigned port, collects static files, provisions a PostgreSQL database, and runs database migrations at startup. To use it, create/update the Render service from the repository's Blueprint.
 
-The Blueprint passes Render's database connection URL as `DATABASE_URL`; the Django settings use it for PostgreSQL and fail startup instead of silently using SQLite when production database settings are missing. Render is detected from its environment, which disables Django debug pages and defaults to PostgreSQL even if `USE_POSTGRES` was not separately set. Also set `ALLOWED_HOSTS` to the service hostname and `CSRF_TRUSTED_ORIGINS` to its HTTPS origin (for example, `https://your-service.onrender.com`). Render generates `SECRET_KEY`; keep it private. Uploaded media is not persistent on a standard Render web-service filesystem, so configure persistent private storage before relying on prescription uploads in production.
+The Blueprint passes Render's database connection URL as `DATABASE_URL`; Django requires PostgreSQL and fails startup if its connection settings are missing. Render is detected from its environment, which disables Django debug pages. Also set `ALLOWED_HOSTS` to the service hostname and `CSRF_TRUSTED_ORIGINS` to its HTTPS origin (for example, `https://your-service.onrender.com`). Render generates `SECRET_KEY`; keep it private. Uploaded media is not persistent on a standard Render web-service filesystem, so configure persistent private storage before relying on prescription uploads in production.
 
 For image and scanned-PDF OCR, install Tesseract separately on Windows and add its installation directory to `PATH`. Install the Telugu trained data file (`tel.traineddata`) alongside the English pack to enable Telugu+English OCR. The Render Blueprint installs Tesseract English and Telugu language packs during the build.
 
@@ -89,7 +101,7 @@ Set deployment variables in the hosting platform's secret/environment configurat
 - `SECRET_KEY` to a newly generated, unique random value of at least 50 characters (`py -c "import secrets; print(secrets.token_urlsafe(64))"` can generate one).
 - `ALLOWED_HOSTS` to exact hostnames, comma-separated, with no wildcard.
 - `CSRF_TRUSTED_ORIGINS` to HTTPS origins if requests are made across origins.
-- `USE_POSTGRES=True` and `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`; the default production SSL mode is `require`. Choose a stricter provider-supported SSL mode when available.
+- `DATABASE_URL` or `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, and `DB_PORT`; the default production SSL mode is `require`. Choose a stricter provider-supported SSL mode when available.
 - `SECURE_SSL_REDIRECT=True` and `SECURE_HSTS_SECONDS=31536000` only after HTTPS is verified end-to-end. Set `SECURE_HSTS_INCLUDE_SUBDOMAINS=True` only if every subdomain is HTTPS-ready. HSTS preload is opt-in and should only be enabled after reviewing the browser preload requirements. If a trusted reverse proxy terminates TLS, set `TRUST_X_FORWARDED_PROTO=True` only when that proxy overwrites the forwarded-proto header and prevents client spoofing.
 
 On the release/deploy step, run:

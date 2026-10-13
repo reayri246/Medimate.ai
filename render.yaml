@@ -13,8 +13,6 @@ services:
     envVars:
       - key: DEBUG
         value: "False"
-      - key: USE_POSTGRES
-        value: "True"
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
