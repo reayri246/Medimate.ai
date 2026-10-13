@@ -16,15 +16,7 @@
 </section>
 
 <div class="row g-3 dashboard-shortcuts">
-  <div class="col-6 col-lg-3">
-    <a href="{% url 'guard_home' %}" class="shortcut-card">
-      <span class="shortcut-icon shortcut-mint"><i class="bi bi-clipboard2-pulse"></i></span>
-      <strong>Symptom checker</strong>
-      <span>Check symptoms and get general guidance</span>
-      <i class="bi bi-arrow-right-circle shortcut-arrow"></i>
-    </a>
-  </div>
-  <div class="col-6 col-lg-3">
+  <div class="col-6 col-lg-6">
     <a href="{% url 'medicine_list' %}" class="shortcut-card">
       <span class="shortcut-icon shortcut-blue"><i class="bi bi-capsule"></i></span>
       <strong>Medicine finder</strong>
@@ -32,15 +24,7 @@
       <i class="bi bi-arrow-right-circle shortcut-arrow"></i>
     </a>
   </div>
-  <div class="col-6 col-lg-3">
-    <a href="{% url 'medicine_compare' %}" class="shortcut-card">
-      <span class="shortcut-icon shortcut-amber"><i class="bi bi-shield-check"></i></span>
-      <strong>Safety checker</strong>
-      <span>Compare verified ingredient records</span>
-      <i class="bi bi-arrow-right-circle shortcut-arrow"></i>
-    </a>
-  </div>
-  <div class="col-6 col-lg-3">
+  <div class="col-6 col-lg-6">
     <a href="{% url 'assistant_home' %}" class="shortcut-card">
       <span class="shortcut-icon shortcut-purple"><i class="bi bi-chat-square-text"></i></span>
       <strong>Health assistant</strong>
@@ -162,7 +146,7 @@
         {% for appointment in upcoming_appointments %}
           <div class="appointment-row">
             <span class="activity-icon shortcut-mint"><i class="bi bi-calendar2-check"></i></span>
-            <span class="activity-copy"><strong>{{ appointment.title }}</strong><small>{{ appointment.scheduled_at|date:"M j, Y · g:i A" }}</small></span>
+            <span class="activity-copy"><strong>{{ appointment.title }}</strong><small>{% if appointment.scheduled_at %}{{ appointment.scheduled_at|date:"M j, Y · g:i A" }}{% elif appointment.requested_date %}Requested for {{ appointment.requested_date|date:"M j, Y" }}{% endif %}</small></span>
             <span class="status-pill">{{ appointment.get_status_display }}</span>
           </div>
         {% endfor %}
@@ -205,6 +189,6 @@
 <section class="dashboard-care-banner">
   <span class="care-banner-icon"><i class="bi bi-flower1"></i></span>
   <div><strong>Take care of your health</strong><p>Track, manage and stay informed with MediMate AI.</p></div>
-  <a href="{% url 'guard_home' %}" class="btn btn-primary">Start symptom check <i class="bi bi-arrow-right"></i></a>
+  <a href="{% url 'health_profile' %}" class="btn btn-primary">View health profile <i class="bi bi-arrow-right"></i></a>
 </section>
 {% endblock %}

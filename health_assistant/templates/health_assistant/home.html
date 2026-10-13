@@ -5,25 +5,35 @@
 {% block content %}
 <div class="assistant-layout">
   <section class="assistant-intro">
-    <span class="assistant-mark"><i class="bi bi-chat-square-heart"></i></span>
-    <p class="eyebrow mb-1">MEDIMATE HEALTH INFORMATION</p>
-    <h1>How can I help you today?</h1>
-    <p class="text-secondary">Ask for general health information or look up source-verified medicine details. I can't diagnose, predict your health, or tell you what medicine to take.</p>
+    <div class="assistant-intro-copy">
+      <span class="assistant-mark"><i class="bi bi-chat-square-heart"></i></span>
+      <div>
+        <p class="eyebrow mb-1">MEDIMATE HEALTH INFORMATION</p>
+        <h1>How can I help you today?</h1>
+        <p>Ask for general health information or look up source-verified medicine details. I can't diagnose, predict your health, or tell you what medicine to take.</p>
+      </div>
+    </div>
+    <span class="assistant-private-note"><i class="bi bi-shield-lock"></i> Private by design · Processed locally</span>
   </section>
 
   <div class="row g-4">
-    <div class="col-lg-7">
+    <div class="col-md-7">
       <section class="dashboard-panel assistant-question-panel">
         <div class="panel-heading">
-          <div><h2>Ask a question</h2><p>Your question is processed locally and isn't saved by this assistant.</p></div>
+          <span class="assistant-panel-icon"><i class="bi bi-chat-dots"></i></span>
+          <div class="assistant-panel-heading-copy"><h2>Ask a question</h2><p>Your question is processed locally and isn't saved by this assistant.</p></div>
         </div>
         <form method="post">
           {% csrf_token %}
           <div class="assistant-input-wrap">
+            <label class="assistant-input-label" for="{{ form.question.id_for_label }}">Your health question</label>
             {{ form.question }}
           </div>
           {% if form.question.errors %}
             <div class="text-danger small mt-2">{{ form.question.errors }}</div>
+          {% endif %}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger py-2 mt-2" role="alert">{{ form.non_field_errors }}</div>
           {% endif %}
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
             <small class="text-secondary">General information only · No diagnosis or prescriptions</small>
@@ -41,50 +51,54 @@
       </section>
     </div>
 
-    <div class="col-lg-5">
-      <section class="assistant-safety-card">
-        <span class="shortcut-icon shortcut-amber"><i class="bi bi-shield-exclamation"></i></span>
-        <h2>Health and medicine safety</h2>
-        <ul>
-          <li>No diagnosis or personal health predictions.</li>
-          <li>No medicine or dosage recommendations from symptoms.</li>
-          <li>Medicine facts are shown only when verified sources are available.</li>
-          <li>Unknown interaction information is never treated as safe.</li>
-        </ul>
-        <a href="{% url 'medicine_list' %}" class="btn btn-outline-primary btn-sm">Browse medicine catalog</a>
-        <a href="{% url 'medicine_compare' %}" class="btn btn-outline-primary btn-sm ms-1">Compare ingredients</a>
-      </section>
+    <div class="col-md-5">
+      {% if answer %}
+        <section class="dashboard-panel assistant-answer assistant-answer-side{% if answer.kind == 'boundary' or answer.kind == 'medicine_boundary' %} is-boundary{% endif %}" aria-live="polite">
+          <div class="d-flex align-items-start gap-3">
+            <span class="assistant-answer-icon{% if answer.kind == 'emergency' %} is-emergency{% endif %}"><i class="bi {% if answer.kind == 'emergency' %}bi-exclamation-triangle{% else %}bi-heart-pulse{% endif %}"></i></span>
+            <div class="flex-grow-1">
+              <p class="eyebrow mb-1">ASSISTANT RESPONSE</p>
+              <h2>{{ answer.heading }}</h2>
+              <p>{{ answer.body }}</p>
+              {% if answer.details %}
+                <ul>{% for detail in answer.details %}<li>{{ detail }}</li>{% endfor %}</ul>
+              {% endif %}
+              {% if answer.cautions %}
+                <div class="{% if answer.kind == 'emergency' %}alert alert-danger{% else %}alert alert-warning{% endif %} mt-3">
+                  {% for caution in answer.cautions %}<p class="{% if not forloop.last %}mb-2{% else %}mb-0{% endif %}">{{ caution }}</p>{% endfor %}
+                </div>
+              {% endif %}
+              {% if answer.sources %}
+                <h3 class="h6 mt-3">Sources</h3>
+                <ul class="assistant-sources">
+                  {% for source in answer.sources %}
+                    <li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a>{% if source.verified %} · verified {{ source.verified|date:"Y-m-d" }}{% endif %}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+              <p class="assistant-disclaimer mb-0">{{ answer.disclaimer }}</p>
+            </div>
+          </div>
+        </section>
+      {% else %}
+        <section class="assistant-safety-card">
+          <div class="assistant-safety-heading">
+            <span class="shortcut-icon shortcut-amber"><i class="bi bi-shield-exclamation"></i></span>
+            <span class="assistant-safety-label">YOUR SAFETY COMES FIRST</span>
+          </div>
+          <h2>What this assistant can—and can't—do</h2>
+          <p class="assistant-safety-intro">Helpful health information, with clear limits.</p>
+          <ul>
+            <li><i class="bi bi-check2"></i><span>Share general health information, not a diagnosis or personal prediction.</span></li>
+            <li><i class="bi bi-check2"></i><span>Explain medicine facts, but not recommend a medicine or dose for symptoms.</span></li>
+            <li><i class="bi bi-check2"></i><span>Show medicine details only when verified sources are available.</span></li>
+            <li><i class="bi bi-check2"></i><span>For interactions or personal advice, talk with a pharmacist or clinician.</span></li>
+          </ul>
+          <a href="{% url 'medicine_list' %}" class="btn btn-outline-primary btn-sm">Browse medicine catalog <i class="bi bi-arrow-right ms-1"></i></a>
+          <div class="assistant-safety-footer"><i class="bi bi-info-circle"></i> If you think this is an emergency, contact local emergency services.</div>
+        </section>
+      {% endif %}
     </div>
   </div>
-
-  {% if answer %}
-    <section class="dashboard-panel assistant-answer mt-4" aria-live="polite">
-      <div class="d-flex align-items-start gap-3">
-        <span class="assistant-answer-icon{% if answer.kind == 'emergency' %} is-emergency{% endif %}"><i class="bi {% if answer.kind == 'emergency' %}bi-exclamation-triangle{% else %}bi-heart-pulse{% endif %}"></i></span>
-        <div class="flex-grow-1">
-          <p class="eyebrow mb-1">ASSISTANT RESPONSE</p>
-          <h2>{{ answer.heading }}</h2>
-          <p>{{ answer.body }}</p>
-          {% if answer.details %}
-            <ul>{% for detail in answer.details %}<li>{{ detail }}</li>{% endfor %}</ul>
-          {% endif %}
-          {% if answer.cautions %}
-            <div class="{% if answer.kind == 'emergency' %}alert alert-danger{% else %}alert alert-warning{% endif %} mt-3">
-              {% for caution in answer.cautions %}<p class="{% if not forloop.last %}mb-2{% else %}mb-0{% endif %}">{{ caution }}</p>{% endfor %}
-            </div>
-          {% endif %}
-          {% if answer.sources %}
-            <h3 class="h6 mt-3">Sources</h3>
-            <ul class="assistant-sources">
-              {% for source in answer.sources %}
-                <li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a>{% if source.verified %} · verified {{ source.verified|date:"Y-m-d" }}{% endif %}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-          <p class="assistant-disclaimer mb-0">{{ answer.disclaimer }}</p>
-        </div>
-      </div>
-    </section>
-  {% endif %}
 </div>
 {% endblock %}

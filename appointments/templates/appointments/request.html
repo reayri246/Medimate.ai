@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Find a doctor | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4 appointment-finder-page">
+  <div class="col-lg-9">
+    <section class="dashboard-panel mb-4">
+      <p class="eyebrow">APPOINTMENT REQUEST</p>
+      <h1>Find an available doctor</h1>
+      <p class="text-secondary">Your description is compared locally with the symptom terms entered by the administrator on doctor profiles. This does not diagnose a condition or recommend treatment; a clinician must assess your concerns.</p>
+      <form method="post" class="mt-4">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="find">
+        {{ routing_form.as_p }}
+        <button type="submit" class="btn btn-primary">Find doctors on duty</button>
+      </form>
+    </section>
+
+    {% if emergency_message %}
+      <div class="alert alert-danger" role="alert">{{ emergency_message }}</div>
+    {% endif %}
+
+    {% if matching %}
+      <section class="dashboard-panel">
+        <h2>Available doctors for {{ selected_date|date:"F j, Y" }}</h2>
+        <p class="text-secondary">Doctors are listed only when their administrator-entered consultation terms match your description and their office marks them active and on duty.</p>
+        {% if matched_terms %}<p><strong>Matched doctor terms:</strong> {{ matched_terms|join:", " }}</p>{% endif %}
+        {% if doctor_matches %}
+          <div class="doctor-match-list">
+          {% for match in doctor_matches %}
+            {% with doctor=match.doctor %}
+            <article class="doctor-match-card">
+              <div class="doctor-result">
+                {% if doctor.photo %}
+                  <img class="doctor-result-photo" src="{{ doctor.photo.url }}" alt="Profile photo of {{ doctor.name }}">
+                {% else %}
+                  <span class="doctor-result-photo doctor-result-placeholder" aria-hidden="true"><i class="bi bi-person-badge"></i></span>
+                {% endif %}
+                <div class="flex-grow-1">
+                  <h3 class="h5 mb-1">{{ doctor.name }}</h3>
+                  <p class="mb-1">{{ doctor.get_specialty_display }}{% if doctor.qualifications %} · {{ doctor.qualifications }}{% endif %}</p>
+                  <p class="small text-primary mb-1">Matched consultation terms: {{ match.matched_symptoms|join:", " }}</p>
+                  <p class="small mb-1"><strong>Working hours:</strong> {{ match.working_hours.0|time:"g:i A" }}–{{ match.working_hours.1|time:"g:i A" }}</p>
+                  <p class="text-secondary small mb-0">{{ doctor.consultation_office }}</p>
+                </div>
+              </div>
+              <div class="mt-3">
+              <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="step" value="choose">
+                <input type="hidden" name="symptoms" value="{{ selected_symptoms }}">
+                <input type="hidden" name="requested_date" value="{{ selected_date|date:'Y-m-d' }}">
+                <input type="hidden" name="doctor" value="{{ doctor.pk }}">
+                <button type="submit" class="btn btn-outline-primary">Request appointment</button>
+              </form>
+              </div>
+            </article>
+            {% endwith %}
+          {% endfor %}
+          </div>
+        {% else %}
+          {% if has_doctors_on_duty %}
+            <div class="alert alert-info mb-0">Doctors are on duty on this date, but none of their administrator-entered consultation terms matched your description. Try describing the main symptom in different words, or contact the consultation office. The app will not guess a specialty when no configured match exists.</div>
+          {% else %}
+            <div class="alert alert-info mb-0">No doctors are marked on duty for this date. An administrator must edit the doctor in Django Admin → Appointments → Doctors and add the weekday under Doctor working days, or add an on-duty Doctor availability entry for this exact date. A doctor profile alone does not set a work schedule.</div>
+          {% endif %}
+        {% endif %}
+      </section>
+    {% endif %}
+
+    {% if confirm_request %}
+      <section class="dashboard-panel">
+        <h2>Before sending your request</h2>
+        <p>Doctor: <strong>{{ doctor.name }} · {{ doctor.get_specialty_display }}</strong></p>
+        <p>Preferred date: <strong>{{ selected_date|date:"F j, Y" }}</strong></p>
+        <p class="text-secondary">Your symptoms and preferred date will be included in the appointment letter and shared with this doctor and the consultation office/reception desk. The office will review your request; this does not confirm an appointment time.</p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="step" value="confirm">
+          {{ permission_form.non_field_errors }}
+          {% for field in permission_form.hidden_fields %}
+            {{ field }}
+            {% if field.errors %}<div class="alert alert-danger py-2" role="alert">{{ field.errors }}</div>{% endif %}
+          {% endfor %}
+          <div class="form-check mb-3">
+            {{ permission_form.consent }}
+            <label class="form-check-label" for="{{ permission_form.consent.id_for_label }}">{{ permission_form.consent.label }}</label>
+            {{ permission_form.consent.errors }}
+          </div>
+          <button type="submit" class="btn btn-primary">Send request and appointment letter</button>
+          <a href="{% url 'appointment_request' %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+      </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

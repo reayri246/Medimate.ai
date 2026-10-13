@@ -7,7 +7,7 @@
   <div class="col-lg-6">
     <div class="card shadow-sm border-0 p-4">
       <h2 class="mb-3">Upload a prescription or medical report</h2>
-      <p class="text-secondary">Readable text is processed locally. Choose Telugu + English for bilingual image OCR if the Telugu Tesseract language pack is installed.</p>
+      <p class="text-secondary">Text-based PDFs are extracted directly. Scanned PDF pages and images use local OCR when Tesseract is installed. OCR may misread handwriting, faint values, units, and dates; compare the transcription with the original report. The report helper only extracts supported values and printed ranges—it does not diagnose a disease or choose treatment.</p>
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="mb-3">

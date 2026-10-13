@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointment letter | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary">Back to appointments</a>
+    <button type="button" class="btn btn-primary" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+  <article class="card border shadow-sm p-4">
+    <p class="text-uppercase text-primary fw-semibold">Consultation appointment letter</p>
+    <h1 class="h3">Appointment {{ appointment.get_status_display }}</h1>
+    <p>Date prepared: {% now "F j, Y" %}</p>
+    <hr>
+    <p><strong>To:</strong> {{ appointment.doctor.name }}{% if appointment.doctor.qualifications %}, {{ appointment.doctor.qualifications }}{% endif %}</p>
+    <p><strong>Specialty:</strong> {{ appointment.doctor.get_specialty_display }}</p>
+    <p><strong>Consultation office:</strong> {{ appointment.doctor.consultation_office }}</p>
+    {% if appointment.doctor.reception_email %}<p><strong>Reception contact:</strong> {{ appointment.doctor.reception_email }}</p>{% endif %}
+    <hr>
+    <p><strong>Patient:</strong> {{ appointment.user.get_full_name|default:appointment.user.username }}</p>
+    <p><strong>Preferred appointment date:</strong> {{ appointment.requested_date|date:"F j, Y" }}</p>
+    {% if working_hours %}<p><strong>Doctor’s working hours:</strong> {{ working_hours.0|time:"g:i A" }}–{{ working_hours.1|time:"g:i A" }}</p>{% endif %}
+    {% if appointment.scheduled_at %}<p><strong>Confirmed date and time:</strong> {{ appointment.scheduled_at|date:"F j, Y, g:i A" }}</p>{% endif %}
+    <p><strong>Request status:</strong> {{ appointment.get_status_display }}</p>
+    <h2 class="h5 mt-4">Patient’s reason for consultation</h2>
+    <p style="white-space: pre-wrap">{{ appointment.symptoms }}</p>
+    {% if appointment.notes %}<p><strong>Office message:</strong> {{ appointment.notes }}</p>{% endif %}
+    <hr>
+    <p class="text-secondary mb-0">This letter records an appointment request and the patient’s permission to share the information above with the selected doctor and consultation office/reception desk. It is not medical advice. A requested date is not confirmed until the office accepts the request and assigns a time.</p>
+  </article>
+</div>
+{% endblock %}

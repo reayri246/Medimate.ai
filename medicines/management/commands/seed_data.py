@@ -6,7 +6,7 @@ from django.utils.text import slugify
 from django.utils import timezone
 
 from accounts.models import User
-from appointments.models import Appointment
+from appointments.models import Appointment, Doctor, DoctorWorkingDay
 from health_tracking.models import HealthMeasurement
 from medical_records.models import MedicalRecord
 from medicines.models import Medicine
@@ -35,6 +35,38 @@ class Command(BaseCommand):
         if not user.demo_abha_id:
             user.demo_abha_id = f'DEMO-ABHA-{user.pk:08d}'
             user.save(update_fields=['demo_abha_id'])
+
+        sample_doctors = [
+            ('general-practice', 'fever, cold, fatigue, body aches'),
+            ('cardiology', 'palpitations, irregular heartbeat, blood pressure concerns'),
+            ('dermatology', 'rash, itchy skin, acne, eczema'),
+            ('ent', 'earache, sore throat, sinus congestion, hearing concerns'),
+            ('gastroenterology', 'stomach pain, nausea, vomiting, diarrhea, constipation'),
+            ('gynecology', 'menstrual concerns, pelvic pain, pregnancy questions'),
+            ('neurology', 'headaches, migraine, memory loss, nerve pain, numbness, muscle weakness'),
+            ('ophthalmology', 'eye pain, blurry vision, vision changes, red eyes'),
+            ('orthopedics', 'joint pain, back pain, knee pain, bone injury'),
+            ('pediatrics', 'child fever, child cough, infant feeding concerns'),
+            ('psychiatry', 'anxiety, panic, depression, mood concerns'),
+            ('pulmonology', 'persistent cough, wheezing, asthma, breathing concerns'),
+        ]
+        three_day_schedule = (0, 2, 4)
+        six_day_schedule = (0, 1, 2, 3, 4, 5)
+        for index, (specialty, treatable_symptoms) in enumerate(sample_doctors):
+            specialty_label = dict(Doctor.SPECIALTY_CHOICES)[specialty]
+            doctor, _ = Doctor.objects.get_or_create(
+                name=f'DEMO - Dr. {specialty_label}',
+                defaults={
+                    'specialty': specialty,
+                    'qualifications': 'Sample profile — not a real doctor',
+                    'treatable_symptoms': treatable_symptoms,
+                    'consultation_office': 'DEMO consultation office',
+                    'is_active': True,
+                },
+            )
+            workdays = six_day_schedule if index % 2 or specialty == 'neurology' else three_day_schedule
+            for weekday in workdays:
+                DoctorWorkingDay.objects.get_or_create(doctor=doctor, weekday=weekday)
 
         medicine_data = [
             {
@@ -83,7 +115,6 @@ class Command(BaseCommand):
                     'source_name': '',
                     'source_url': '',
                     'safety_data_verified': False,
-                    'is_non_prescription': False,
                 },
             )
 
@@ -130,6 +161,8 @@ class Command(BaseCommand):
             ('Sample health check-in', 'A sample measurement was added to your health tracking history.'),
             ('Sample appointment scheduled', 'A demonstration appointment was added to your calendar.'),
             ('Sample record added', 'An illustrative medical record was added for the demo profile.'),
+            ('Sample appointment reminder', 'SAMPLE ONLY. This is a demonstration reminder; confirm actual appointment details with your care team.'),
+            ('Sample report ready', 'SAMPLE ONLY. A demonstration report was added to the records page. Always check reports against the original document.'),
         ]
         for title, body in activity_samples:
             Notification.objects.update_or_create(

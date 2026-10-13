@@ -4,28 +4,43 @@
 
 {% block content %}
 <div class="mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Notifications</h2>
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <p class="eyebrow mb-1">YOUR UPDATES</p>
+      <h1 class="h2 mb-0">Notifications</h1>
+    </div>
     <form method="post">
       {% csrf_token %}
-      <button type="submit" class="btn btn-outline-primary">Mark all read</button>
+      <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check2-all me-1"></i> Mark all read</button>
     </form>
   </div>
 
   {% if notifications %}
-    {% for item in notifications %}
-      <div class="card shadow-sm border-0 mb-3 {% if not item.is_read %}border-warning{% endif %}">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-1">{{ item.title }}</h5>
-            {% if not item.is_read %}<span class="badge bg-warning text-dark">New</span>{% endif %}
-          </div>
-          <p class="mb-0 text-secondary">{{ item.body }}</p>
-        </div>
+    {% if unread_notifications %}
+      <div class="alert alert-success d-flex align-items-center gap-2" role="status">
+        <i class="bi bi-bell-fill"></i>
+        <span>You have {{ unread_notifications }} new notification{{ unread_notifications|pluralize }}.</span>
       </div>
+    {% endif %}
+    {% for item in notifications %}
+      <article class="notification-card{% if not item.is_read %} is-unread{% endif %}">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <h2 class="notification-title">{{ item.title }}</h2>
+          {% if not item.is_read %}<span class="badge rounded-pill text-bg-success">New</span>{% endif %}
+        </div>
+        <p class="mb-1 mt-2 text-secondary">{{ item.body }}</p>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
+          <time class="small text-secondary" datetime="{{ item.created_at|date:'c' }}">{{ item.created_at|date:"M j, Y · g:i A" }}</time>
+          {% if item.url %}<a class="btn btn-sm btn-outline-primary" href="{% url 'notification_open' item.pk %}">Open details <i class="bi bi-arrow-right ms-1"></i></a>{% endif %}
+        </div>
+      </article>
     {% endfor %}
   {% else %}
-    <div class="alert alert-info">No notifications to display.</div>
+    <div class="notification-empty">
+      <i class="bi bi-bell"></i>
+      <h2>You’re all caught up</h2>
+      <p>No notifications to display right now.</p>
+    </div>
   {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ record.title }} | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="detail-page mt-4">
+  <a href="{% url 'record_list' %}" class="btn btn-link px-0">&larr; Back to medical records</a>
+  <article class="dashboard-panel mt-2">
+    <p class="eyebrow mb-1">{{ record.get_record_type_display }}</p>
+    <h1 class="h3">{{ record.title }}</h1>
+    <p class="text-secondary">Saved {{ record.created_at|date:"M j, Y · g:i A" }}</p>
+    <div class="detail-record-notes">{{ record.notes|linebreaks }}</div>
+    <p class="small text-secondary mt-4 mb-0">Personal notes are not interpreted or verified by the app. For scanned reports or prescriptions, upload the original file for local OCR review.</p>
+  </article>
+</div>
+{% endblock %}

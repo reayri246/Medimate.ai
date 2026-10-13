@@ -3,41 +3,54 @@
 {% block title %}Medicine database | MediMate AI{% endblock %}
 
 {% block content %}
-<div class="row mt-4 g-4">
-  <div class="col-lg-8">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-      <h2 class="mb-0">Medicine database</h2>
-      <a href="{% url 'medicine_compare' %}" class="btn btn-outline-primary">Compare medicines</a>
-    </div>
-    <form method="get" class="d-flex gap-2 mt-3">
-      {{ form.as_p }}
+<div class="medicine-finder-page mt-4">
+  <section class="medicine-finder-hero">
+    <div class="medicine-finder-mark"><i class="bi bi-capsule-pill"></i></div>
+    <p class="eyebrow mb-1">REFERENCE CATALOG</p>
+    <h1>Medicine finder</h1>
+    <p>Search catalog entries by medicine name or active ingredient. This is reference information, not a recommendation to start or change a medicine.</p>
+    <form method="get" class="medicine-search-form" role="search">
+      <label class="visually-hidden" for="{{ form.query.id_for_label }}">Search medicines</label>
+      <i class="bi bi-search" aria-hidden="true"></i>
+      {{ form.query }}
       <button type="submit" class="btn btn-primary">Search</button>
     </form>
+  </section>
 
-    <div class="mt-4">
-      {% if medicines %}
-        {% for medicine in medicines %}
-          <div class="card mb-3 border-0 shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-1"><a href="{% url 'medicine_detail' medicine.slug %}">{{ medicine.name }}</a></h5>
-                <span class="badge bg-light text-dark">{{ medicine.category }}</span>
-              </div>
-              {% if medicine.has_verified_composition %}
-                <span class="badge text-bg-success mt-2">Verified composition</span>
-                <p class="text-secondary mb-1 mt-2">{{ medicine.active_ingredient }} • {{ medicine.dosage_form }} • {{ medicine.strength }}</p>
-                <p class="mb-0">{{ medicine.description|truncatewords:24 }}</p>
-              {% else %}
-                <span class="badge text-bg-secondary mt-2">Demonstration entry — not verified</span>
-                <p class="text-secondary mt-2 mb-0">Verified ingredient composition and safety information are unavailable. Do not rely on this entry for a medicine safety decision.</p>
-              {% endif %}
-            </div>
-          </div>
-        {% endfor %}
-      {% else %}
-        <div class="alert alert-info">No matching medicines found for "{{ query }}".</div>
-      {% endif %}
-    </div>
+  <div class="medicine-results-heading d-flex flex-wrap justify-content-between align-items-end gap-2">
+    <div><h2>Catalog results</h2><p class="text-secondary mb-0">{% if query %}Matches for “{{ query }}”{% else %}Browse available entries{% endif %}</p></div>
+    <span class="small text-secondary">{{ medicines|length }} result{{ medicines|length|pluralize }}</span>
   </div>
+  {% if medicines %}
+    <div class="row g-3">
+      {% for medicine in medicines %}
+        <div class="col-md-6 col-xl-4">
+          <article class="medicine-result-card">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <span class="medicine-card-icon"><i class="bi bi-capsule"></i></span>
+              <span class="badge medicine-category">{{ medicine.category|default:"Catalog entry" }}</span>
+            </div>
+            <h3><a href="{% url 'medicine_detail' medicine.slug %}">{{ medicine.name }}</a></h3>
+            {% if medicine.has_verified_composition %}
+              <span class="medicine-verification is-verified"><i class="bi bi-patch-check-fill"></i> Verified composition</span>
+              <p class="medicine-ingredient">{{ medicine.active_ingredient }}{% if medicine.strength %} · {{ medicine.strength }}{% endif %}</p>
+              <p class="medicine-description">{{ medicine.description|truncatewords:26 }}</p>
+            {% else %}
+              <span class="medicine-verification"><i class="bi bi-exclamation-circle"></i> Demonstration entry — not verified</span>
+              <p class="medicine-description">Verified composition and safety information are unavailable. Do not rely on this entry for a medicine safety decision.</p>
+            {% endif %}
+            <a href="{% url 'medicine_detail' medicine.slug %}" class="medicine-card-link">View catalog details <i class="bi bi-arrow-right"></i></a>
+          </article>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="medicine-empty-state">
+      <i class="bi bi-search"></i>
+      <h3>No matching medicines</h3>
+      <p>Try a different name or active ingredient. If the product is not in the catalog, ask a pharmacist or clinician.</p>
+      {% if query %}<a href="{% url 'medicine_list' %}" class="btn btn-outline-primary btn-sm">Clear search</a>{% endif %}
+    </div>
+  {% endif %}
 </div>
 {% endblock %}

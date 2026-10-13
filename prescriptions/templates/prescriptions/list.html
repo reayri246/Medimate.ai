@@ -49,7 +49,7 @@
               <h6>{% if summary_language == 'te' %}సాధ్యమైన పరీక్ష విలువలు{% else %}Possible test values{% endif %}</h6>
               {% if document.extracted_details.test_values %}
                 <ul class="mb-0">
-                  {% for item in document.extracted_details.test_values %}
+                  {% for item in document.explained_test_values %}
                     <li>
                       {{ item.name }}: {{ item.value }} {{ item.unit }}
                       {% if item.printed_reference_range %}
@@ -64,11 +64,18 @@
                           <span class="small text-secondary">{% if summary_language == 'te' %}ఈ విలువ పత్రంలో ముద్రించిన పరిధిలో ఉంది; ఇది ఆరోగ్య నిర్ధారణ కాదు.{% else %}This value is within the interval printed on the report; this is not a health assessment.{% endif %}</span>
                         {% endif %}
                       {% endif %}
+                      {% if item.what_it_measures %}
+                        <p class="small text-secondary mt-1 mb-1"><strong>In simple terms:</strong> {{ item.what_it_measures }}</p>
+                        {% if item.out_of_range_context %}
+                          <p class="small text-secondary mb-1"><strong>Possible general associations:</strong> {{ item.out_of_range_context }}</p>
+                        {% endif %}
+                        <small class="d-block mb-2"><a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.source_name }}: general lab-test information</a></small>
+                      {% endif %}
                       <small class="text-secondary">({{ item.source_text }})</small>
                     </li>
                   {% endfor %}
                 </ul>
-                <small class="text-secondary">{% if summary_language == 'te' %}విలువల సాధారణ పరిధులు ప్రయోగశాల మరియు వ్యక్తి ఆధారంగా మారుతాయి.{% else %}Reference ranges vary by laboratory and individual.{% endif %}</small>
+                <small class="text-secondary">{% if summary_language == 'te' %}విలువల సాధారణ పరిధులు ప్రయోగశాల మరియు వ్యక్తి ఆధారంగా మారుతాయి.{% else %}Reference ranges vary by laboratory and individual. General explanations are not a diagnosis and may not explain an individual result.{% endif %}</small>
               {% else %}
                 <p class="text-secondary mb-0">{% if summary_language == 'te' %}గుర్తించబడలేదు{% else %}None detected{% endif %}</p>
               {% endif %}
@@ -131,6 +138,7 @@
               <p class="small text-secondary mb-0">Reviewed by you{% if document.reviewed_at %} on {{ document.reviewed_at|date:"M j, Y · g:i A" }}{% endif %}. This is not professional verification.</p>
             </section>
           {% endif %}
+          <a href="{% url 'document_text' document.id %}" class="btn btn-outline-secondary btn-sm">View original and full extracted text</a>
           <a href="{% url 'document_review' document.id %}" class="btn btn-primary btn-sm">Review or correct extracted fields</a>
           {% if document.document_type == 'prescription' %}
             <a href="{% url 'prescription_soft_copy' document.id %}" class="btn btn-outline-success btn-sm">Open printable soft copy</a>

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-labelledby="title desc">
+  <title id="title">MediMate AI prototype architecture</title>
+  <desc id="desc">Users access a Django application. The prescription pipeline validates uploads, stores originals, extracts text using PDF tools and local Tesseract, applies deterministic extraction and lab context, stores structured data, and presents results in an owner-scoped profile. Other Django apps handle appointments, notifications, tracking, medicines, and records. A minimal FHIR-shaped export is a demonstration only.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eff8f6"/><stop offset="1" stop-color="#f3f5fc"/></linearGradient>
+    <linearGradient id="head" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#075e55"/><stop offset="1" stop-color="#176c89"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#173d46" flood-opacity=".12"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M1 1l8 5-8 5" fill="none" stroke="#438b83" stroke-width="2"/></marker>
+    <style>
+      .title{font:700 31px 'Segoe UI',Arial;fill:#153c4a}.subtitle{font:15px 'Segoe UI',Arial;fill:#607a80}
+      .box{fill:#fff;stroke:#d6e7e3;stroke-width:2;rx:16;filter:url(#shadow)}
+      .accent{fill:#e5f6f0;stroke:#bfe5d8}.blue{fill:#edf4ff;stroke:#cfddf3}.gold{fill:#fff5df;stroke:#efdcb2}
+      .boxTitle{font:700 18px 'Segoe UI',Arial;fill:#193f4c}.text{font:14px 'Segoe UI',Arial;fill:#526b73}
+      .small{font:12px 'Segoe UI',Arial;fill:#657d82}.arrow{fill:none;stroke:#438b83;stroke-width:2.4;marker-end:url(#arrow)}
+      .line{fill:none;stroke:#8aa7a8;stroke-width:2;marker-end:url(#arrow)}
+      .tag{font:700 11px 'Segoe UI',Arial;fill:#087f70;letter-spacing:1px}
+    </style>
+  </defs>
+  <rect width="1500" height="900" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1500" height="92" fill="url(#head)"/>
+  <text x="52" y="48" font-family="Segoe UI,Arial" font-size="30" font-weight="700" fill="#fff">MediMate AI — Prototype Architecture</text>
+  <text x="54" y="74" font-family="Segoe UI,Arial" font-size="13" fill="#d5f0ec">Current implementation · local OCR + deterministic extraction · not clinical AI</text>
+
+  <rect class="box accent" x="55" y="150" width="235" height="155"/>
+  <text class="tag" x="78" y="181">ACTORS</text><text class="boxTitle" x="78" y="211">Patient / Staff / Admin</text>
+  <text class="text" x="78" y="239">Browser UI · responsive templates</text><text class="text" x="78" y="262">Authentication · CSRF protection</text>
+  <text class="small" x="78" y="286">Owner-scoped patient record views</text>
+
+  <rect class="box" x="355" y="130" width="380" height="230"/>
+  <text class="tag" x="380" y="163">DJANGO WEB APPLICATION</text><text class="boxTitle" x="380" y="193">config · URL routing · WSGI</text>
+  <rect class="box accent" x="380" y="215" width="150" height="112" rx="11" filter="none"/>
+  <text class="boxTitle" x="396" y="244" font-size="15">Prescriptions</text><text class="text" x="396" y="269">Upload · review</text><text class="text" x="396" y="290">OCR · export</text><text class="text" x="396" y="311">audit history</text>
+  <rect class="box blue" x="550" y="215" width="160" height="112" rx="11" filter="none"/>
+  <text class="boxTitle" x="566" y="244" font-size="15">Other apps</text><text class="text" x="566" y="269">Profile · tracking</text><text class="text" x="566" y="290">appointments</text><text class="text" x="566" y="311">medicines · notices</text>
+
+  <rect class="box gold" x="805" y="130" width="330" height="230"/>
+  <text class="tag" x="830" y="163">LOCAL DOCUMENT PIPELINE</text><text class="boxTitle" x="830" y="193">Validate &amp; preserve source</text>
+  <text class="text" x="830" y="224">PDF: pypdf text extraction</text><text class="text" x="830" y="248">Scans: PyMuPDF rendering</text>
+  <text class="text" x="830" y="272">Images: Pillow normalization</text><text class="text" x="830" y="296">Tesseract OCR (eng / optional tel)</text>
+  <text class="small" x="830" y="331">20-page PDF cap · OCR is provisional</text>
+
+  <rect class="box" x="1200" y="130" width="245" height="230"/>
+  <text class="tag" x="1225" y="163">RULE LAYER</text><text class="boxTitle" x="1225" y="193">Deterministic extraction</text>
+  <text class="text" x="1225" y="224">Catalog medicine matching</text><text class="text" x="1225" y="248">Selected lab labels / values</text>
+  <text class="text" x="1225" y="272">Printed ranges / dates</text><text class="text" x="1225" y="296">Labeled diagnosis text</text>
+  <text class="small" x="1225" y="331">No generative document model</text>
+
+  <path class="arrow" d="M290 225h55"/><path class="arrow" d="M735 245h60"/><path class="arrow" d="M1135 245h55"/>
+  <path class="arrow" d="M1320 365v70h-170"/>
+
+  <rect class="box accent" x="825" y="455" width="385" height="175"/>
+  <text class="tag" x="850" y="488">PRESENTATION &amp; REVIEW</text><text class="boxTitle" x="850" y="518">Owner-only report detail</text>
+  <text class="text" x="850" y="548">Original + raw OCR + candidate fields</text>
+  <text class="text" x="850" y="572">Patient medicine review kept separate</text>
+  <text class="text" x="850" y="596">General lab context with source link</text>
+  <path class="arrow" d="M1015 360v85"/>
+
+  <rect class="box blue" x="390" y="455" width="365" height="175"/>
+  <text class="tag" x="415" y="488">PERSISTENCE</text><text class="boxTitle" x="415" y="518">Relational database</text>
+  <text class="text" x="415" y="548">SQLite local · PostgreSQL production</text>
+  <text class="text" x="415" y="572">User · document · extraction JSON</text>
+  <text class="text" x="415" y="596">review state · audit · care data</text>
+  <path class="arrow" d="M825 540h-55"/>
+  <path class="line" d="M545 360v85"/>
+
+  <rect class="box" x="55" y="455" width="270" height="175"/>
+  <text class="tag" x="80" y="488">PRIVATE MEDIA</text><text class="boxTitle" x="80" y="518">Original documents</text>
+  <text class="text" x="80" y="548">Local MEDIA_ROOT by default</text>
+  <text class="text" x="80" y="572">Production requires persistent</text>
+  <text class="text" x="80" y="596">private volume/object storage</text>
+  <path class="line" d="M410 330v70H190v45"/>
+
+  <rect class="box gold" x="825" y="690" width="620" height="130"/>
+  <text class="tag" x="850" y="722">DEMONSTRATION BOUNDARY</text><text class="boxTitle" x="850" y="752">FHIR-shaped export · fictional demo ABHA-style ID</text>
+  <text class="text" x="850" y="780">Not validated/certified FHIR exchange · no ABDM connection · no clinical diagnosis or AI interpretation</text>
+  <path class="line" d="M1015 630v45"/>
+  <rect x="55" y="690" width="700" height="130" rx="16" fill="#e8f7ef" stroke="#cfe9da"/>
+  <text x="82" y="725" font-family="Segoe UI,Arial" font-size="15" font-weight="700" fill="#245b48">Trust and safety controls</text>
+  <text class="text" x="82" y="754">Authentication · owner filters · CSRF · upload bounds · no-store responses · attachment downloads</text>
+  <text class="text" x="82" y="780">OCR/provenance warnings · source comparison · no medicine/dose recommendations</text>
+</svg>

@@ -1,8 +1,8 @@
 import re
 
 from medicines.models import ActiveIngredient, Medicine
-from medicines.safety import verified_medicines
-from mediguard.services.triage import assess_symptom_urgency
+from medicines.catalog import verified_medicines
+from .emergency import identify_emergency_phrase
 
 
 DISCLAIMER = (
@@ -98,11 +98,11 @@ def answer_health_question(question):
         answer['body'] = 'Enter a general health question or describe what information you are looking for.'
         return answer
 
-    emergency_assessment = assess_symptom_urgency(cleaned, age=18)
-    if emergency_assessment['level'] == 'Emergency':
+    emergency_recommendation = identify_emergency_phrase(cleaned)
+    if emergency_recommendation:
         answer.update({
             'heading': 'Seek emergency care now',
-            'body': emergency_assessment['recommendation'],
+            'body': emergency_recommendation,
             'cautions': [
                 'Do not wait for an online assistant. Contact your local emergency service now.',
             ],
@@ -215,6 +215,47 @@ def answer_health_question(question):
             'healthy sleep habits. Seek professional advice for persistent sleep problems or significant '
             'daytime impairment.'
         )
+        answer['details'] = [
+            'Keep a regular time for going to bed and waking up when possible.',
+            'Reduce stimulating activities and bright screens close to bedtime.',
+            'Avoid relying on alcohol or unprescribed medicines to help you sleep.',
+        ]
+    elif _contains_term(cleaned, ('headache', 'headaches', 'migraine', 'migraines')):
+        answer['heading'] = 'General information about headaches'
+        answer['body'] = (
+            'Headaches can have many causes, and this assistant cannot determine which applies. Note '
+            'when the headache started and any associated changes, and seek advice from a healthcare '
+            'professional if it is new, recurring, worsening, or concerning.'
+        )
+        answer['cautions'] = [
+            'A sudden severe headache, or a headache with weakness, confusion, fainting, vision loss, '
+            'fever with a stiff neck, or after a significant head injury needs urgent medical assessment.',
+        ]
+    elif _contains_term(cleaned, ('diarrhea', 'diarrhoea', 'vomiting', 'stomach upset')):
+        answer['heading'] = 'General information about stomach upset'
+        answer['body'] = (
+            'Vomiting or diarrhea can lead to dehydration. Take fluids in small, frequent amounts if '
+            'you can, and follow local food-safety and handwashing guidance. A clinician can advise '
+            'whether further assessment is needed.'
+        )
+        answer['cautions'] = [
+            'Seek prompt medical advice for blood in vomit or stool, signs of dehydration, severe pain, '
+            'persistent symptoms, or if you are concerned about an infant or medically vulnerable person.',
+        ]
+    elif _contains_term(cleaned, ('exercise', 'physical activity', 'fitness')):
+        answer['heading'] = 'General information about physical activity'
+        answer['body'] = (
+            'Regular physical activity can support general wellbeing. Choose activity suitable for your '
+            'abilities, increase gradually, and follow advice from your healthcare professional if you '
+            'have a health condition or are returning after illness.'
+        )
+    elif _contains_term(cleaned, ('healthy diet', 'nutrition', 'balanced diet', 'healthy eating')):
+        answer['heading'] = 'General information about nutrition'
+        answer['body'] = (
+            'A varied eating pattern with a range of fruits, vegetables, whole grains, and other locally '
+            'available nutritious foods can support general health. Individual needs vary; seek tailored '
+            'advice from a qualified healthcare professional or dietitian.'
+        )
     elif _contains_term(cleaned, ('prevent disease', 'prevent illness', 'vaccination', 'vaccine', 'prevention')):
         answer['heading'] = 'General health prevention'
         answer['body'] = (
@@ -226,12 +267,13 @@ def answer_health_question(question):
         answer['heading'] = 'I can share general health information'
         answer['body'] = (
             'I did not find a verified answer for that question in the local information available. '
-            'Try asking about general fever care, cold-like symptoms, blood pressure, medicine safety, '
-            'sleep, or prevention — or consult a qualified healthcare professional.'
+            'Try asking about fever care, cold-like symptoms, blood pressure, medicine safety, sleep, '
+            'headaches, stomach upset, activity, nutrition, or prevention — or consult a qualified healthcare professional.'
         )
 
-    answer['cautions'] = [
-        'This assistant cannot diagnose disease, predict an individual health outcome, or recommend medicines based on symptoms.',
-        'Seek medical care for severe, worsening, persistent, or concerning symptoms.',
-    ]
+    if not answer['cautions']:
+        answer['cautions'] = [
+            'This assistant cannot diagnose disease, predict an individual health outcome, or recommend medicines based on symptoms.',
+            'Seek medical care for severe, worsening, persistent, or concerning symptoms.',
+        ]
     return answer

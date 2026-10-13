@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  › <a href="{% url 'admin:app_list' app_label='notifications' %}">Notifications</a>
+  › <a href="{% url 'admin:notifications_notification_changelist' %}">Notifications</a>
+  › {% translate 'Send notifications' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="errornote">{{ form.non_field_errors }}</div>{% endif %}
+    <fieldset class="module aligned">
+      <div class="form-row">
+        {{ form.audience.errors }}
+        <div><label>{{ form.audience.label }}:</label>{{ form.audience }}</div>
+      </div>
+      <div class="form-row" data-notification-recipient>
+        {{ form.recipients.errors }}
+        <div><label for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}:</label>{{ form.recipients }}<div class="help">{{ form.recipients.help_text }}</div><div class="help">Use Ctrl or Command to select multiple users.</div></div>
+      </div>
+      <div class="form-row">
+        {{ form.title.errors }}
+        <div><label for="{{ form.title.id_for_label }}">{{ form.title.label }}:</label>{{ form.title }}</div>
+      </div>
+      <div class="form-row">
+        {{ form.body.errors }}
+        <div><label for="{{ form.body.id_for_label }}">{{ form.body.label }}:</label>{{ form.body }}</div>
+      </div>
+      <div class="form-row">
+        {{ form.url.errors }}
+        <div><label for="{{ form.url.id_for_label }}">{{ form.url.label }}:</label>{{ form.url }}<div class="help">{{ form.url.help_text }}</div></div>
+      </div>
+    </fieldset>
+    <div class="submit-row"><input type="submit" value="{% translate 'Send notifications' %}" class="default"></div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const audienceInputs = document.querySelectorAll('input[name="audience"]');
+    const recipientField = document.querySelector('[data-notification-recipient]');
+    const updateRecipientVisibility = function () {
+      recipientField.hidden = !Array.from(audienceInputs).some(function (input) {
+        return input.checked && input.value === 'selected';
+      });
+    };
+    audienceInputs.forEach(function (input) {
+      input.addEventListener('change', updateRecipientVisibility);
+    });
+    updateRecipientVisibility();
+  });
+</script>
+{% endblock %}

@@ -22,6 +22,21 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  const notificationAudienceInputs = document.querySelectorAll('input[name="audience"]');
+  const notificationRecipientField = document.querySelector('[data-notification-recipient]');
+  if (notificationAudienceInputs.length && notificationRecipientField) {
+    const updateNotificationRecipientVisibility = function () {
+      const individualSelected = Array.from(notificationAudienceInputs).some(function (input) {
+        return input.checked && input.value === 'selected';
+      });
+      notificationRecipientField.hidden = !individualSelected;
+    };
+    notificationAudienceInputs.forEach(function (input) {
+      input.addEventListener('change', updateNotificationRecipientVisibility);
+    });
+    updateNotificationRecipientVisibility();
+  }
+
   const chartElement = document.getElementById('measurementChart');
   const chartDataElement = document.getElementById('measurement-chart-data');
   if (chartElement && chartDataElement && typeof Chart !== 'undefined') {

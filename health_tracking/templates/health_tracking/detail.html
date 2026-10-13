@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Measurement details | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="detail-page mt-4">
+  <a href="{% url 'tracking_home' %}" class="btn btn-link px-0">&larr; Back to health tracking</a>
+  <section class="dashboard-panel mt-2">
+    <p class="eyebrow mb-1">PRIVATE HEALTH MEASUREMENT</p>
+    <h1 class="h3">{{ measurement.date|date:"F j, Y" }}</h1>
+    <p class="text-secondary">Personal measurements are shown as recorded and are not a diagnosis.</p>
+    <div class="row g-3 mt-2">
+      {% if measurement.blood_pressure %}<div class="col-sm-6 col-lg-4"><div class="detail-value"><small>Blood pressure</small><strong>{{ measurement.blood_pressure }}</strong></div></div>{% endif %}
+      {% if measurement.heart_rate %}<div class="col-sm-6 col-lg-4"><div class="detail-value"><small>Heart rate</small><strong>{{ measurement.heart_rate }} bpm</strong></div></div>{% endif %}
+      {% if measurement.weight_kg %}<div class="col-sm-6 col-lg-4"><div class="detail-value"><small>Weight</small><strong>{{ measurement.weight_kg }} kg</strong></div></div>{% endif %}
+      {% if measurement.temperature_c %}<div class="col-sm-6 col-lg-4"><div class="detail-value"><small>Temperature</small><strong>{{ measurement.temperature_c }} &deg;C</strong></div></div>{% endif %}
+      {% if measurement.glucose_mgdl %}<div class="col-sm-6 col-lg-4"><div class="detail-value"><small>Glucose</small><strong>{{ measurement.glucose_mgdl }} mg/dL</strong></div></div>{% endif %}
+    </div>
+    {% if measurement.notes %}<section class="mt-4"><h2 class="h5">Notes</h2><p class="mb-0">{{ measurement.notes|linebreaksbr }}</p></section>{% endif %}
+    <p class="small text-secondary mt-4 mb-0">Discuss readings and changes with a qualified healthcare professional, especially if you feel unwell or are concerned.</p>
+  </section>
+</div>
+{% endblock %}

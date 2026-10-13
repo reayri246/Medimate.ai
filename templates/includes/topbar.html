@@ -13,7 +13,7 @@
       {% if unread_notifications %}<span class="notification-dot">{{ unread_notifications }}</span>{% endif %}
     </a>
     <div class="topbar-divider"></div>
-    <a class="topbar-profile" href="{% url 'dashboard' %}">
+    <a class="topbar-profile" href="{% url 'health_profile' %}">
       <span class="profile-avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
       <span class="profile-copy"><strong>{{ user.get_full_name|default:user.username }}</strong><small>{{ user.get_role_display|default:'Patient' }}</small></span>
       <i class="bi bi-chevron-down"></i>

@@ -47,6 +47,19 @@ class HealthAssistantTests(TestCase):
         self.assertIn('did not find a verified answer', answer['body'])
         self.assertEqual(answer['sources'], [])
 
+    def test_local_assistant_answers_common_general_health_topics(self):
+        examples = (
+            ('How can I support better sleep?', 'consistent sleep and wake schedule'),
+            ('What is general information about headaches?', 'Headaches can have many causes'),
+            ('What helps prevent dehydration with diarrhea?', 'Vomiting or diarrhea can lead to dehydration'),
+            ('What are the general benefits of physical activity?', 'Regular physical activity'),
+            ('What is a balanced diet?', 'A varied eating pattern'),
+        )
+        for question, expected in examples:
+            with self.subTest(question=question):
+                answer = answer_health_question(question)
+                self.assertIn(expected, answer['body'])
+
     def test_verified_catalog_information_includes_source_and_caution(self):
         ingredient = ActiveIngredient.objects.create(
             name='Example verified ingredient',
@@ -98,6 +111,7 @@ class HealthAssistantTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'assistant cannot tell whether symptoms are a cold')
         self.assertContains(response, 'No diagnosis or prescriptions')
+        self.assertContains(response, 'assistant-answer-side')
         self.assertContains(response, 'Try asking')
 
     def test_assistant_page_flags_emergency(self):

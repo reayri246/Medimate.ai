@@ -1,4 +1,4 @@
-import mimetypes
+from io import BytesIO
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -8,16 +8,29 @@ from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .forms import MedicineReviewFormSet, UploadDocumentForm
 from .models import DocumentUpload, PrescriptionAuditLog
 from .services.ocr import extract_text_from_uploaded_file
+from .services.ocr_formatting import format_ocr_points
+from .services.lab_explanations import explain_lab_test
 from .services.record_intelligence import (
     build_fhir_bundle,
     build_prescription_soft_copy,
     extract_record_details,
 )
 from medicines.models import Medicine
+
+
+def _explained_test_values(document):
+    details = document.extracted_details or {}
+    values = []
+    for value in details.get('test_values', []):
+        explained_value = dict(value)
+        explained_value.update(explain_lab_test(value))
+        values.append(explained_value)
+    return values
 
 
 @login_required
@@ -34,6 +47,8 @@ def prescription_list(request):
         )
         for document in documents.object_list
     ])
+    for document in documents.object_list:
+        document.explained_test_values = _explained_test_values(document)
     language = 'te' if request.GET.get('lang') == 'te' else 'en'
     return render(request, 'prescriptions/list.html', {
         'documents': documents,
@@ -63,20 +78,95 @@ def prescription_upload(request):
                     action=PrescriptionAuditLog.ACTION_UPLOADED,
                     metadata={'document_type': document.document_type},
                 )
-            if document.extracted_details['medicines'] or document.extracted_details['test_values']:
-                messages.success(
-                    request,
-                    'Upload complete. Possible details were extracted from readable text. Review every item against the original document.',
-                )
-            else:
-                messages.info(
-                    request,
-                    'Upload complete. No supported medicine names or lab values were recognized in readable text. Check the original document; OCR may not read scans or handwriting clearly.',
-                )
-            return redirect('prescription_list')
+            messages.success(
+                request,
+                'Upload complete. The document was processed locally. Compare the extracted text with the original document.',
+            )
+            return redirect('document_text', document_id=document.pk)
     else:
         form = UploadDocumentForm()
     return render(request, 'prescriptions/upload.html', {'form': form})
+
+
+@login_required
+def document_text(request, document_id):
+    document = get_object_or_404(DocumentUpload, pk=document_id, user=request.user)
+    image_extensions = {'.png', '.jpg', '.jpeg', '.bmp', '.tiff'}
+    extension = '.' + document.file.name.rsplit('.', 1)[-1].lower() if '.' in document.file.name else ''
+    if request.method == 'POST':
+        if extension not in image_extensions | {'.pdf'}:
+            raise Http404('OCR retry is not available for this file type.')
+        document.extracted_text = extract_text_from_uploaded_file(
+            document.file,
+            language=document.ocr_language,
+        )
+        document.extracted_details = extract_record_details(document.extracted_text)
+        document.extracted_medicines = document.extracted_details['medicines']
+        document.save(update_fields=[
+            'extracted_text',
+            'extracted_details',
+            'extracted_medicines',
+        ])
+        PrescriptionAuditLog.objects.create(
+            document=document,
+            actor=request.user,
+            action=PrescriptionAuditLog.ACTION_VIEWED,
+            metadata={'access_method': 'local_ocr_reprocessed'},
+        )
+        if 'Tesseract is not installed' in document.extracted_text or 'OCR is unavailable' in document.extracted_text:
+            messages.warning(request, document.extracted_text)
+        elif 'No text was detected' in document.extracted_text or 'no text detected' in document.extracted_text:
+            messages.warning(request, 'OCR ran, but could not read text from this image. Try a clearer scan and check the original.')
+        else:
+            messages.success(request, 'Local OCR finished. Compare the extracted text with the original document.')
+        return redirect('document_text', document_id=document.pk)
+
+    PrescriptionAuditLog.objects.create(
+        document=document,
+        actor=request.user,
+        action=PrescriptionAuditLog.ACTION_VIEWED,
+        metadata={'access_method': 'extracted_text_page'},
+    )
+    response = render(request, 'prescriptions/document_text.html', {
+        'document': document,
+        'ocr_points': format_ocr_points(document.extracted_text),
+        'explained_test_values': _explained_test_values(document),
+        'show_image_preview': extension in image_extensions,
+        'show_pdf_preview': extension == '.pdf',
+        'can_retry_ocr': extension in image_extensions | {'.pdf'},
+    })
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
+
+
+@login_required
+def document_image_preview(request, document_id):
+    document = get_object_or_404(DocumentUpload, pk=document_id, user=request.user)
+    extension = '.' + document.file.name.rsplit('.', 1)[-1].lower() if '.' in document.file.name else ''
+    if extension not in {'.png', '.jpg', '.jpeg', '.bmp', '.tiff'}:
+        raise Http404('An image preview is not available for this document.')
+    try:
+        document.file.open('rb')
+        with document.file:
+            with Image.open(document.file) as source_image:
+                image = ImageOps.exif_transpose(source_image)
+                image.load()
+            image.thumbnail((2200, 2200))
+            output = BytesIO()
+            image.convert('RGB').save(output, format='JPEG', quality=90)
+            output.seek(0)
+    except (FileNotFoundError, OSError, ValueError, UnidentifiedImageError, Image.DecompressionBombError) as exc:
+        raise Http404('The requested image preview is unavailable.') from exc
+    response = FileResponse(
+        BytesIO(output.getvalue()),
+        content_type='image/jpeg',
+        filename='document-preview.jpg',
+    )
+    response['Content-Disposition'] = 'inline; filename="document-preview.jpg"'
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 @login_required

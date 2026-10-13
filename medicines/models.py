@@ -37,10 +37,6 @@ class Medicine(models.Model):
     side_effects = models.TextField(blank=True)
     interactions = models.TextField(blank=True)
     contraindications = models.TextField(blank=True)
-    is_non_prescription = models.BooleanField(
-        default=False,
-        help_text='Enable only for medicines confirmed to be non-prescription in the intended region.',
-    )
     source_name = models.CharField(max_length=200, blank=True)
     source_url = models.URLField(blank=True)
     last_verified = models.DateField(null=True, blank=True)

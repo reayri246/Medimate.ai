@@ -3,34 +3,59 @@
 {% block title %}Medical records | MediMate AI{% endblock %}
 
 {% block content %}
-<div class="row mt-4 g-4">
-  <div class="col-lg-5">
-    <div class="card shadow-sm border-0 p-4">
-      <h2 class="mb-3">Add medical record</h2>
-      <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Save record</button>
-      </form>
-    </div>
+<div class="records-page">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div><p class="eyebrow mb-1">PRIVATE HEALTH LIBRARY</p><h1 class="h2 mb-1">Medical records</h1><p class="text-secondary mb-0">Your uploaded reports and personal care notes in one place.</p></div>
+    <a href="{% url 'prescription_upload' %}" class="btn btn-primary"><i class="bi bi-cloud-arrow-up me-1"></i> Upload a report</a>
   </div>
-  <div class="col-lg-7">
-    <div class="card shadow-sm border-0 p-4">
-      <h2 class="mb-3">Records overview</h2>
-      {% if records %}
-        {% for record in records %}
-          <div class="border rounded p-3 mb-2">
-            <div class="d-flex justify-content-between align-items-center">
-              <strong>{{ record.title }}</strong>
-              <span class="badge bg-light text-dark">{{ record.record_type }}</span>
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <section class="dashboard-panel">
+          <h2 class="h5 mb-1">Add a personal note</h2>
+          <p class="small text-secondary">For scans, lab results, diagnostic reports, and prescriptions, upload the original file instead.</p>
+          <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Save record</button>
+          </form>
+        </section>
+      </div>
+      <div class="col-lg-8">
+        <section class="dashboard-panel mb-4">
+          <div class="panel-heading"><div><h2>Uploaded reports</h2><p>Local OCR results are provisional; open a report to compare against the original.</p></div><span class="badge rounded-pill bg-light text-secondary">{{ documents|length }}</span></div>
+          {% if documents %}
+            <div class="record-card-grid">
+              {% for document in documents %}
+                <a class="record-card report-record-card" href="{% url 'document_text' document.pk %}">
+                  <span class="record-card-icon"><i class="bi bi-file-earmark-medical"></i></span>
+                  <span class="record-card-copy"><strong>{{ document.title }}</strong><small>{{ document.get_document_type_display }} · {{ document.created_at|date:"M j, Y" }}</small></span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              {% endfor %}
             </div>
-            <p class="text-secondary mb-0 mt-2">{{ record.notes }}</p>
-          </div>
-        {% endfor %}
-      {% else %}
-        <p class="text-secondary mb-0">No medical records yet.</p>
-      {% endif %}
+          {% else %}
+            <p class="text-secondary mb-0">No reports uploaded yet. Add a prescription, lab report, diagnostic record, discharge summary, or other medical document.</p>
+          {% endif %}
+        </section>
+
+        <section class="dashboard-panel">
+          <div class="panel-heading"><div><h2>Personal notes</h2><p>Open a note to view its details.</p></div><span class="badge rounded-pill bg-light text-secondary">{{ records|length }}</span></div>
+          {% if records %}
+            {% for record in records %}
+              <a class="record-card note-record-card" href="{% url 'medical_record_detail' record.pk %}">
+                <span class="record-card-icon is-note"><i class="bi bi-journal-text"></i></span>
+                <span class="record-card-copy">
+                  <strong>{{ record.title }}</strong>
+                  <small>{{ record.get_record_type_display }} · {{ record.created_at|date:"M j, Y" }}</small>
+                </span>
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            {% endfor %}
+          {% else %}
+            <p class="text-secondary mb-0">No personal notes yet.</p>
+          {% endif %}
+        </section>
+      </div>
     </div>
-  </div>
 </div>
 {% endblock %}

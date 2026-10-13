@@ -1,12 +1,40 @@
 from datetime import timedelta
 
 from django.core.management import call_command, CommandError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
 from health_tracking.models import HealthMeasurement
 from medical_records.models import MedicalRecord
+from prescriptions.models import DocumentUpload
+
+
+class MedicalRecordsListTests(TestCase):
+    def test_reports_and_notes_render_as_separate_link_cards(self):
+        patient = User.objects.create_user(username='records-patient', password='test-password')
+        DocumentUpload.objects.create(
+            user=patient,
+            title='Lab report',
+            file=SimpleUploadedFile('report.txt', b'Sample report text'),
+        )
+        MedicalRecord.objects.create(
+            user=patient,
+            title='Visit note',
+            record_type='visit',
+            notes='Sample visit note.',
+        )
+        self.client.force_login(patient)
+
+        response = self.client.get(reverse('record_list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'report-record-card')
+        self.assertContains(response, 'note-record-card')
+        self.assertContains(response, 'Lab report')
+        self.assertContains(response, 'Visit note')
 
 
 class SeedPatientReportTests(TestCase):

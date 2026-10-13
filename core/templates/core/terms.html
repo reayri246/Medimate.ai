@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms &amp; Conditions | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+  <header class="legal-hero">
+    <span class="legal-hero-mark"><i class="bi bi-file-earmark-check"></i></span>
+    <p class="eyebrow mb-1">MEDIMATE AI · LEGAL</p>
+    <h1>Terms &amp; Conditions</h1>
+    <p>Please read these terms before using MediMate AI. They explain the service, its limits, and your responsibilities.</p>
+    <span class="legal-updated"><i class="bi bi-calendar3"></i> Effective October 13, 2026</span>
+  </header>
+
+  <div class="legal-layout">
+    <aside class="legal-toc" aria-label="On this page">
+      <strong>On this page</strong>
+      <a href="#acceptance">Agreement</a>
+      <a href="#service">The service</a>
+      <a href="#medical">Not medical care</a>
+      <a href="#accounts">Accounts and your content</a>
+      <a href="#acceptable-use">Acceptable use</a>
+      <a href="#availability">Availability and changes</a>
+      <a href="#liability">Liability</a>
+      <a href="#contact">Questions</a>
+    </aside>
+
+    <article class="legal-content">
+      <section id="acceptance">
+        <h2><span>01</span> Agreement to these terms</h2>
+        <p>By accessing or using MediMate AI, you agree to these Terms &amp; Conditions. If you do not agree, do not use the service. If you use MediMate AI on behalf of another person or organization, you confirm that you are authorized to accept these terms for them.</p>
+      </section>
+      <section id="service">
+        <h2><span>02</span> What MediMate AI provides</h2>
+        <p>MediMate AI provides tools for organizing health information, recording measurements, managing appointment requests, reviewing uploaded documents, and accessing general health information. Features may change as the service is maintained and improved.</p>
+        <p>Some information, including appointment matches, is based on details entered into the service and is provided for convenience. It is not a clinical assessment or a guarantee that a particular clinician is suitable or available.</p>
+      </section>
+      <section id="medical">
+        <h2><span>03</span> Not medical care or emergency support</h2>
+        <div class="legal-notice"><i class="bi bi-heart-pulse"></i><p><strong>MediMate AI is not a healthcare provider.</strong> The service does not diagnose, treat, prevent, or cure disease and does not replace advice from a qualified clinician or pharmacist.</p></div>
+        <p>Do not rely on the service to make decisions about diagnosis, treatment, or medicines. Always verify extracted text and other information against the original source. Seek advice from a qualified healthcare professional for personal medical questions. For an emergency, contact your local emergency service or go to the nearest emergency department.</p>
+      </section>
+      <section id="accounts">
+        <h2><span>04</span> Accounts and your content</h2>
+        <p>You are responsible for keeping your sign-in credentials secure and for activity carried out through your account. Provide accurate information, keep your account details current, and notify the service administrator if you suspect unauthorized access.</p>
+        <p>Only upload health records or personal information that you have the right to provide. You remain responsible for the content you submit. The service uses submitted information to provide its features, as described in the <a href="{% url 'privacy_policy' %}">Privacy Policy</a>.</p>
+      </section>
+      <section id="acceptable-use">
+        <h2><span>05</span> Acceptable use</h2>
+        <p>Use MediMate AI lawfully and respectfully. Do not attempt to access another person's account or records, disrupt the service, introduce malicious code, misuse appointment or notification features, or use the service in a way that violates another person's rights or applicable law.</p>
+      </section>
+      <section id="availability">
+        <h2><span>06</span> Availability and changes</h2>
+        <p>The service is provided on an “as available” basis. We may update, suspend, or discontinue features for operational, security, or maintenance reasons. We will make reasonable efforts to keep information accurate, but do not guarantee that the service will always be available, error-free, or complete.</p>
+      </section>
+      <section id="liability">
+        <h2><span>07</span> Limitation of responsibility</h2>
+        <p>To the extent permitted by applicable law, MediMate AI and its contributors are not responsible for decisions made solely on the basis of information displayed by the service, errors in user-submitted or extracted information, or interruptions beyond reasonable control. Nothing in these terms limits rights or remedies that cannot legally be excluded.</p>
+      </section>
+      <section id="contact">
+        <h2><span>08</span> Questions about these terms</h2>
+        <p>For questions or requests about these terms, contact the administrator responsible for your MediMate AI deployment. These terms may be updated when the service or its requirements change; the effective date above will be revised when an update is published.</p>
+      </section>
+    </article>
+  </div>
+</div>
+{% endblock %}

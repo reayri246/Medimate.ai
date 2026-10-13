@@ -23,8 +23,9 @@ def assistant_home(request):
             'example_questions': [
                 'What general steps can help with a fever?',
                 'What should I know about cold-like symptoms?',
+                'What are general steps for better sleep?',
+                'How can I support general health with physical activity?',
                 'How can I find verified ingredient information for a medicine?',
-                'What are general ways to support healthy sleep?',
             ],
         },
     )

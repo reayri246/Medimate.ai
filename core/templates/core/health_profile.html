@@ -3,57 +3,88 @@
 {% block title %}Health profile | MediMate AI{% endblock %}
 
 {% block content %}
-<div class="mt-4">
-  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+<div class="health-profile-page mt-4">
+  <div class="health-profile-hero d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
       <p class="eyebrow mb-1">YOUR PRIVATE HEALTH RECORD</p>
       <h1 class="h2 mb-1">Health profile &amp; timeline</h1>
-      <p class="text-secondary mb-0">A chronological view of your uploaded records, measurements, appointments, and activity.</p>
+      <p class="text-secondary mb-0">A clear, private overview of your reports, measurements, and care visits.</p>
     </div>
-    <a href="{% url 'prescription_upload' %}" class="btn btn-primary">Add a health record</a>
+    <a href="{% url 'prescription_upload' %}" class="btn btn-primary"><i class="bi bi-cloud-arrow-up me-1"></i> Add a health record</a>
   </div>
 
-  <section class="dashboard-panel mb-4">
-    <div class="panel-heading">
+  <section class="health-profile-summary dashboard-panel mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <span class="health-profile-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</span>
       <div>
-        <h2>Patient profile</h2>
-        <p>FHIR-style identifiers are for demonstration only.</p>
+        <p class="eyebrow mb-1">PATIENT PROFILE</p>
+        <h2 class="h4 mb-1">{{ request.user.get_full_name|default:request.user.username }}</h2>
+        <p class="text-secondary mb-0">Your information is shown only in your signed-in account.</p>
       </div>
     </div>
-    <dl class="row mb-0">
-      <dt class="col-sm-3">Name</dt>
-      <dd class="col-sm-9">{{ request.user.get_full_name|default:request.user.username }}</dd>
-      {% if demo_abha_id %}
-        <dt class="col-sm-3">Fictional demo ABHA-style ID</dt>
-        <dd class="col-sm-9"><code>{{ demo_abha_id }}</code></dd>
-      {% endif %}
-    </dl>
-    <p class="alert alert-warning mt-3 mb-0">
-      This is not a real ABHA ID, and the app is not connected to ABDM. No health data is being shared with ABDM.
-    </p>
+    {% if demo_abha_id %}
+      <p class="health-profile-id mt-3 mb-0"><span>Fictional demo ID</span> <code>{{ demo_abha_id }}</code></p>
+    {% endif %}
+    <p class="small text-secondary mt-3 mb-0">This is a fictional demo ID, not a real ABHA ID. The app is not connected to ABDM and does not share your health data with it.</p>
   </section>
 
-  <section class="dashboard-panel">
+  <section class="row g-3 mb-4" aria-label="Health profile sections">
+    <div class="col-6 col-xl-3">
+      <a class="health-profile-stat" href="{% url 'prescription_list' %}">
+        <span class="health-profile-stat-icon"><i class="bi bi-file-earmark-medical"></i></span>
+        <span><strong>{{ counts.documents }}</strong><small>Uploaded reports</small></span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+      </a>
+    </div>
+    <div class="col-6 col-xl-3">
+      <a class="health-profile-stat" href="{% url 'record_list' %}">
+        <span class="health-profile-stat-icon is-blue"><i class="bi bi-folder2-open"></i></span>
+        <span><strong>{{ counts.records }}</strong><small>Personal notes</small></span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+      </a>
+    </div>
+    <div class="col-6 col-xl-3">
+      <a class="health-profile-stat" href="{% url 'tracking_home' %}">
+        <span class="health-profile-stat-icon is-violet"><i class="bi bi-heart-pulse"></i></span>
+        <span><strong>{{ counts.measurements }}</strong><small>Measurements</small></span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+      </a>
+    </div>
+    <div class="col-6 col-xl-3">
+      <a class="health-profile-stat" href="{% url 'appointment_list' %}">
+        <span class="health-profile-stat-icon is-amber"><i class="bi bi-calendar2-check"></i></span>
+        <span><strong>{{ counts.appointments }}</strong><small>Appointments</small></span>
+        <i class="bi bi-arrow-up-right ms-auto"></i>
+      </a>
+    </div>
+  </section>
+
+  <section class="dashboard-panel health-profile-timeline">
     <div class="panel-heading">
-      <div><h2>Unified health timeline</h2><p>Most recent activity first</p></div>
+      <div><h2>Unified health timeline</h2><p>Open an item to view its report or details.</p></div>
+      <span class="badge rounded-pill bg-light text-secondary">{{ timeline|length }} recent items</span>
     </div>
     {% if timeline %}
-      <div class="list-group list-group-flush">
+      <div class="health-timeline-list">
         {% for item in timeline %}
-          <article class="list-group-item px-0">
-            <div class="d-flex flex-wrap justify-content-between gap-2">
-              <div>
-                <span class="badge bg-light text-dark me-2">{{ item.kind }}</span>
-                <strong>{{ item.title }}</strong>
-                {% if item.detail %}<p class="text-secondary mb-0 mt-1">{{ item.detail|truncatechars:240 }}</p>{% endif %}
-              </div>
-              <time class="text-secondary">{{ item.timestamp|date:"M j, Y · g:i A" }}</time>
-            </div>
-          </article>
+          <a class="health-timeline-item" href="{{ item.url }}">
+            <span class="health-timeline-dot"><i class="bi {% if item.kind == 'Measurement' %}bi-heart-pulse{% elif item.kind == 'Appointment' %}bi-calendar2-check{% elif item.kind == 'Uploaded document' %}bi-file-earmark-text{% elif item.kind == 'Medical record' %}bi-folder2{% else %}bi-bell{% endif %}"></i></span>
+            <span class="health-timeline-copy">
+              <span class="d-flex flex-wrap align-items-center gap-2"><strong>{{ item.title }}</strong><small class="health-timeline-kind">{{ item.kind }}</small></span>
+              {% if item.detail %}<span class="health-timeline-detail">{{ item.detail|truncatechars:180 }}</span>{% endif %}
+            </span>
+            <time datetime="{{ item.timestamp|date:'c' }}">{{ item.timestamp|date:"M j, Y · g:i A" }}</time>
+            <i class="bi bi-chevron-right health-timeline-arrow"></i>
+          </a>
         {% endfor %}
       </div>
     {% else %}
-      <p class="text-secondary mb-0">Your health timeline is empty. Add a measurement or upload a record to get started.</p>
+      <div class="health-profile-empty">
+        <i class="bi bi-journal-medical"></i>
+        <h3>Your timeline is ready</h3>
+        <p>Add a measurement, personal note, appointment, or report to start building your private health history.</p>
+        <a href="{% url 'prescription_upload' %}" class="btn btn-primary btn-sm">Upload your first report</a>
+      </div>
     {% endif %}
   </section>
 </div>

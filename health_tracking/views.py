@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404
 
 from .forms import HealthMeasurementForm
 from .models import HealthMeasurement
@@ -20,3 +21,17 @@ def tracking_home(request):
     else:
         form = HealthMeasurementForm()
     return render(request, 'health_tracking/home.html', {'measurements': measurements, 'form': form})
+
+
+@login_required
+def measurement_detail(request, measurement_id):
+    measurement = get_object_or_404(
+        HealthMeasurement,
+        pk=measurement_id,
+        user=request.user,
+    )
+    return render(
+        request,
+        'health_tracking/detail.html',
+        {'measurement': measurement},
+    )

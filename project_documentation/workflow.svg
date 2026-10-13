@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1550" viewBox="0 0 1200 1550" role="img" aria-labelledby="title desc">
+  <title id="title">MediMate AI record workflow</title>
+  <desc id="desc">Patient signs in, uploads a medical file, the source is preserved, local OCR extracts text, deterministic rules identify candidate fields, patient reviews results, report appears in the health timeline, and an optional preliminary FHIR-shaped export is available.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eff8f6"/><stop offset="1" stop-color="#f3f5fc"/></linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#075e55"/><stop offset="1" stop-color="#168b83"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#173d46" flood-opacity=".12"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M1 1l8 5-8 5" fill="none" stroke="#438b83" stroke-width="2"/></marker>
+    <style>
+      .box{fill:#fff;stroke:#d6e7e3;stroke-width:2;rx:17;filter:url(#shadow)}.teal{fill:#e5f6f0;stroke:#bfe5d8}.gold{fill:#fff5df;stroke:#efdcb2}.blue{fill:#edf4ff;stroke:#cfddf3}
+      .t{font:700 19px 'Segoe UI',Arial;fill:#193f4c}.p{font:14px 'Segoe UI',Arial;fill:#526b73}.s{font:12px 'Segoe UI',Arial;fill:#657d82}.tag{font:700 11px 'Segoe UI',Arial;fill:#087f70;letter-spacing:1px}
+      .a{fill:none;stroke:#438b83;stroke-width:2.5;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="1550" fill="url(#bg)"/>
+  <rect width="1200" height="100" fill="url(#teal)"/>
+  <text x="55" y="48" font-family="Segoe UI,Arial" font-size="31" font-weight="700" fill="#fff">Medical Record Workflow</text>
+  <text x="57" y="76" font-family="Segoe UI,Arial" font-size="14" fill="#d5f0ec">Local processing · provisional findings · human review</text>
+
+  <rect class="box teal" x="320" y="140" width="560" height="105"/>
+  <text class="tag" x="350" y="170">01 · ACCESS</text><text class="t" x="350" y="201">Patient signs in</text><text class="p" x="350" y="225">Authenticated session; records are associated with the patient account.</text>
+  <path class="a" d="M600 245v34"/>
+
+  <rect class="box" x="320" y="285" width="560" height="120"/>
+  <text class="tag" x="350" y="315">02 · UPLOAD</text><text class="t" x="350" y="346">Choose record type, file, and OCR language</text><text class="p" x="350" y="372">Prescription · lab report · discharge · diagnostic · other</text><text class="s" x="350" y="393">Form checks allowed format and size.</text>
+  <path class="a" d="M600 405v34"/>
+
+  <rect class="box gold" x="320" y="445" width="560" height="135"/>
+  <text class="tag" x="350" y="475">03 · PRESERVE SOURCE</text><text class="t" x="350" y="506">Save the original privately</text><text class="p" x="350" y="532">Keep the uploaded file available for comparison and owner download.</text><text class="s" x="350" y="557">Production deployment must configure private persistent media storage.</text>
+  <path class="a" d="M600 580v34"/>
+
+  <rect class="box blue" x="320" y="620" width="560" height="150"/>
+  <text class="tag" x="350" y="650">04 · LOCAL TEXT EXTRACTION</text><text class="t" x="350" y="681">PDF text tools + image OCR</text><text class="p" x="350" y="707">pypdf text · PyMuPDF render · Pillow normalize · Tesseract OCR</text><text class="s" x="350" y="735">Scanned PDF OCR capped at 20 pages; Telugu requires language data.</text>
+  <path class="a" d="M600 770v34"/>
+
+  <rect class="box" x="320" y="810" width="560" height="160"/>
+  <text class="tag" x="350" y="840">05 · RULE-BASED EXTRACTION</text><text class="t" x="350" y="871">Create candidate fields</text><text class="p" x="350" y="897">Catalog medicine matches · dosage lines · selected lab values</text><text class="p" x="350" y="921">printed same-line ranges · date strings · labeled impression text</text><text class="s" x="350" y="950">No generative clinical model; extraction can miss or misread data.</text>
+  <path class="a" d="M600 970v34"/>
+
+  <rect class="box teal" x="320" y="1010" width="560" height="165"/>
+  <text class="tag" x="350" y="1040">06 · PATIENT REVIEW</text><text class="t" x="350" y="1071">Compare original and extracted result</text><text class="p" x="350" y="1097">Review medicines, source lines, values, dates, and OCR text.</text><text class="p" x="350" y="1121">Corrections are separate from raw OCR; review is not clinician approval.</text><text class="s" x="350" y="1151">General lab context is limited, source-linked, and not diagnosis.</text>
+  <path class="a" d="M600 1175v34"/>
+
+  <rect class="box blue" x="320" y="1215" width="560" height="120"/>
+  <text class="tag" x="350" y="1245">07 · UNIFIED HEALTH PROFILE</text><text class="t" x="350" y="1276">Add report to owner's timeline</text><text class="p" x="350" y="1302">Measurements · appointments · notes · uploads · notifications</text>
+  <path class="a" d="M600 1335v34"/>
+
+  <rect class="box gold" x="320" y="1375" width="560" height="110"/>
+  <text class="tag" x="350" y="1405">08 · OPTIONAL EXPORT</text><text class="t" x="350" y="1436">FHIR-shaped demo JSON</text><text class="p" x="350" y="1462">Preliminary only; not certified FHIR or connected to ABDM.</text>
+
+  <rect x="930" y="625" width="220" height="350" rx="16" fill="#fff" stroke="#dce8e8" filter="url(#shadow)"/>
+  <text class="tag" x="952" y="660">EXCEPTIONS</text>
+  <text class="t" x="952" y="696" font-size="16">OCR unavailable?</text><text class="p" x="952" y="721">Keep source; show</text><text class="p" x="952" y="742">explicit notice.</text>
+  <text class="t" x="952" y="786" font-size="16">No text found?</text><text class="p" x="952" y="811">Ask for clearer scan;</text><text class="p" x="952" y="832">show original.</text>
+  <text class="t" x="952" y="876" font-size="16">Unknown test?</text><text class="p" x="952" y="901">Do not infer meaning.</text>
+  <text class="s" x="952" y="944">Never suggest treatment.</text>
+</svg>

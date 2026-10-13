@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Appointment desk | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+  <h1>Appointment desk</h1>
+  <p class="text-secondary">Review patient requests sent to the doctor and consultation office. Patient symptoms are private health information; access only what is needed for appointment coordination.</p>
+  {% if appointments %}
+    {% for appointment in appointments %}
+      <section class="dashboard-panel mb-3">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+          <div>
+            <h2 class="h4">{{ appointment.doctor.name }} · {{ appointment.doctor.get_specialty_display }}</h2>
+            <p class="mb-1">Patient: {{ appointment.user.get_full_name|default:appointment.user.username }} · {{ appointment.user.email }}</p>
+            <p class="text-secondary mb-2">Preferred date: {{ appointment.requested_date|date:"F j, Y" }}</p>
+            {% if appointment.working_hours %}<p class="small text-secondary mb-2">Doctor’s working hours: {{ appointment.working_hours.0|time:"g:i A" }}–{{ appointment.working_hours.1|time:"g:i A" }}</p>{% endif %}
+            <h3 class="h6">Reason for consultation</h3>
+            <p style="white-space: pre-wrap">{{ appointment.symptoms }}</p>
+          </div>
+          <a href="{% url 'appointment_letter' appointment.pk %}" class="btn btn-outline-primary align-self-start">Open letter</a>
+        </div>
+        <a href="{% url 'staff_appointment_decision' appointment.pk %}" class="btn btn-primary">Review and decide</a>
+      </section>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info">There are no pending appointment requests.</div>
+  {% endif %}
+</div>
+{% endblock %}

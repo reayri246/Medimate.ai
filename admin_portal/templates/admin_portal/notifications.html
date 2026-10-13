@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Send notifications | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="admin-notification-page mt-4">
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow mb-1">ADMINISTRATION</p>
+      <h1 class="h2 mb-1">Send a notification</h1>
+      <p class="text-secondary mb-0">Send an in-app message to all active users or one or more selected users.</p>
+    </div>
+    <a href="{% url 'portal_home' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Admin overview</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <section class="dashboard-panel admin-notification-form-panel">
+        <div class="panel-heading">
+          <div><h2>Compose notification</h2><p>Messages appear in the recipient’s notifications page.</p></div>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+          <fieldset class="mb-3">
+            <legend class="form-label fw-semibold">Recipients</legend>
+            <div class="notification-audience-options">{{ form.audience }}</div>
+            {% if form.audience.errors %}<div class="text-danger small mt-1">{{ form.audience.errors }}</div>{% endif %}
+          </fieldset>
+          <div class="mb-3" data-notification-recipient>
+            <label class="form-label" for="{{ form.recipients.id_for_label }}">{{ form.recipients.label }}</label>
+            {{ form.recipients }}
+            <div class="form-text">Use Ctrl or Command to select more than one user.</div>
+            {% if form.recipients.errors %}<div class="text-danger small mt-1">{{ form.recipients.errors }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
+            {{ form.body }}
+            {% if form.body.errors %}<div class="text-danger small mt-1">{{ form.body.errors }}</div>{% endif %}
+          </div>
+          <div class="mb-4">
+            <label class="form-label" for="{{ form.url.id_for_label }}">{{ form.url.label }}</label>
+            {{ form.url }}
+            <div class="form-text">{{ form.url.help_text }}</div>
+            {% if form.url.errors %}<div class="text-danger small mt-1">{{ form.url.errors }}</div>{% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i> Send notification</button>
+        </form>
+      </section>
+    </div>
+    <div class="col-lg-5">
+      <aside class="admin-notification-guidance">
+        <span class="site-footer-note-icon"><i class="bi bi-megaphone"></i></span>
+        <h2>Before you send</h2>
+        <ul>
+          <li>Use clear, respectful language and avoid putting private health information in a message sent to multiple users.</li>
+          <li>“All active users” creates one in-app notification per active account.</li>
+          <li>Selected-recipient messages are visible only to the accounts you choose.</li>
+          <li>Notifications are in-app; they are not sent by email or SMS.</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock %}

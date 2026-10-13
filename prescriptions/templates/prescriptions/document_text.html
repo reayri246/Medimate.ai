@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Extracted document text | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <a href="{% url 'prescription_list' %}" class="btn btn-link px-0">&larr; Back to records</a>
+      <h1 class="h2 mb-0">Uploaded document and extracted text</h1>
+      <p class="text-secondary mb-0">{{ document.get_document_type_display }} · {{ document.title }}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'document_download' document.id %}" class="btn btn-outline-secondary">Download original</a>
+      <a href="{% url 'document_review' document.id %}" class="btn btn-outline-primary">Review extracted fields</a>
+      {% if can_retry_ocr %}
+        <form method="post" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-primary">Retry local OCR</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="alert alert-warning">
+    This page shows OCR text read from the uploaded file. OCR can misread handwriting, numbers, units, and dates.
+    Compare the text with the original. Extracted report values are not a diagnosis or treatment recommendation.
+  </div>
+
+  <div class="row g-4">
+    {% if show_image_preview %}
+      <section class="col-lg-6" aria-labelledby="originalDocumentHeading">
+        <div class="card border-0 shadow-sm p-3 h-100">
+          <h2 id="originalDocumentHeading" class="h5">Original uploaded image</h2>
+          <img
+            src="{% url 'document_image_preview' document.id %}"
+            class="img-fluid rounded border"
+            alt="Preview of the uploaded medical document"
+            loading="lazy"
+          >
+          <p class="small text-secondary mt-2 mb-0">Compare this source image against every extracted line.</p>
+        </div>
+      </section>
+    {% elif show_pdf_preview %}
+      <section class="col-lg-6">
+        <div class="card border-0 shadow-sm p-3 h-100">
+          <h2 class="h5">Original PDF</h2>
+          <p>Use Download original to view the source PDF alongside this extracted text.</p>
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="{% if show_image_preview or show_pdf_preview %}col-lg-6{% else %}col-12{% endif %}" aria-labelledby="extractedTextHeading">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <h2 id="extractedTextHeading" class="h5">Extracted text</h2>
+        {% if document.extracted_text %}
+          <p class="small text-secondary">Reformatted into points for easier reading. OCR wording is unchanged; compare it with the original because recognition may be inaccurate.</p>
+          {% if ocr_points %}
+            <ul class="border rounded p-3 ps-5 mb-3">
+              {% for point in ocr_points %}<li class="mb-2">{{ point }}</li>{% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-secondary">No readable points were found in the OCR text.</p>
+          {% endif %}
+          <details>
+            <summary>View original raw OCR text</summary>
+            <pre class="text-wrap border rounded p-3 mt-2 mb-0" style="white-space: pre-wrap;">{{ document.extracted_text }}</pre>
+          </details>
+        {% else %}
+          <div class="alert alert-info mb-0">
+            No text was extracted. Try a clear, upright, well-lit image or PDF scan. Confirm Tesseract and the selected
+            OCR language pack are installed on the server. For handwriting or unclear scans, compare the original
+            with a clearer copy or ask a clinician/pharmacist to verify it. This application processes uploaded documents locally.
+          </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+
+  <section class="record-summary-section mt-4" aria-labelledby="recordSummaryHeading">
+    <div class="record-summary-heading">
+      <span class="record-summary-icon"><i class="bi bi-clipboard2-pulse"></i></span>
+      <div>
+        <h2 id="recordSummaryHeading">Extracted record summary</h2>
+        <p>
+          Local extraction found {{ document.extracted_medicines|length }} possible medicine {% if document.extracted_medicines|length == 1 %}match{% else %}matches{% endif %},
+          {{ explained_test_values|length }} supported lab value{{ explained_test_values|length|pluralize }},
+          {{ document.extracted_details.diagnosis_mentions|length }} text item{{ document.extracted_details.diagnosis_mentions|length|pluralize }} labeled as diagnosis/impression,
+          and {{ document.extracted_details.dates|length }} date mention{{ document.extracted_details.dates|length|pluralize }}.
+          Check every item against the original document.
+        </p>
+      </div>
+      {% if document.review_status == 'reviewed' %}
+        <span class="record-review-badge is-reviewed"><i class="bi bi-check2-circle"></i> Patient review complete</span>
+      {% else %}
+        <span class="record-review-badge"><i class="bi bi-eye"></i> Needs your review</span>
+      {% endif %}
+    </div>
+    <div class="record-summary-grid">
+      <section class="record-summary-card">
+        <h3><i class="bi bi-capsule"></i> Possible medicines</h3>
+        {% if document.extracted_medicines %}
+          <ul>
+            {% for item in document.extracted_medicines %}
+              <li>{{ item.name }} <small>Possible catalog {{ item.match_type }} match; verify the name against the original.</small></li>
+            {% endfor %}
+          </ul>
+        {% else %}<p class="record-summary-empty">No catalog medicine match detected.</p>{% endif %}
+        {% if document.extracted_details.prescription_items %}
+          <h4 class="record-summary-subheading">Strength and directions as read</h4>
+          <ul>
+            {% for item in document.extracted_details.prescription_items %}
+              <li>
+                <strong>{{ item.recognized_text }}</strong>
+                {% if item.strength_mentions %}<span>Strength text: {{ item.strength_mentions|join:", " }}</span>{% endif %}
+                {% if item.quantity_as_written %}<span>Quantity as written: {{ item.quantity_as_written }}</span>{% endif %}
+                {% if item.dosage_instructions_as_written %}<span>Source line: {{ item.dosage_instructions_as_written }}</span>{% endif %}
+                <small>OCR transcription only; confirm against the prescription. Not dosing advice.</small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </section>
+
+      <section class="record-summary-card">
+        <h3><i class="bi bi-prescription2"></i> Dosage text</h3>
+        {% if document.extracted_details.dosage_mentions %}
+          <ul>
+            {% for item in document.extracted_details.dosage_mentions %}
+              <li><strong>{{ item.medicine }}</strong><span>{{ item.text }}</span></li>
+            {% endfor %}
+          </ul>
+        {% else %}<p class="record-summary-empty">No dosage text matched to a catalog medicine.</p>{% endif %}
+      </section>
+
+      <section class="record-summary-card record-summary-card-wide">
+        <h3><i class="bi bi-activity"></i> Lab values and general context</h3>
+        <p class="record-summary-note">General test information only—not an AI-generated clinical interpretation or diagnosis.</p>
+        {% if explained_test_values %}
+          <ul class="record-lab-list">
+            {% for item in explained_test_values %}
+              <li>
+                <div class="record-lab-value"><strong>{{ item.name }}: {{ item.value }} {{ item.unit }}</strong>
+                  {% if item.printed_reference_range %}<span>Report range: {{ item.printed_reference_range }} {{ item.unit }}</span>{% endif %}
+                  {% if item.range_comparison == 'below' %}<span class="record-range-flag">Below the printed range</span>
+                  {% elif item.range_comparison == 'above' %}<span class="record-range-flag">Above the printed range</span>
+                  {% elif item.range_comparison == 'within' %}<span class="record-range-ok">Within the printed range; this does not confirm health status</span>{% endif %}
+                </div>
+                {% if item.what_it_measures %}
+                  <p><strong>In simple terms:</strong> {{ item.what_it_measures }}</p>
+                  {% if item.out_of_range_context %}
+                    <p><strong>Possible general associations:</strong> {{ item.out_of_range_context }}</p>
+                  {% endif %}
+                  <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.source_name }}: general lab-test information</a>
+                {% endif %}
+                <small class="record-source-text">Extracted text: {{ item.source_text }}</small>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}<p class="record-summary-empty">No supported lab values detected.</p>{% endif %}
+      </section>
+
+      <section class="record-summary-card">
+        <h3><i class="bi bi-journal-medical"></i> Diagnosis text</h3>
+        {% if document.extracted_details.diagnosis_mentions %}
+          <ul>{% for item in document.extracted_details.diagnosis_mentions %}<li>{{ item.label }}: {{ item.text }}</li>{% endfor %}</ul>
+        {% else %}<p class="record-summary-empty">No text explicitly labeled as a diagnosis or impression was detected.</p>{% endif %}
+      </section>
+
+      <section class="record-summary-card">
+        <h3><i class="bi bi-calendar3"></i> Dates found</h3>
+        {% if document.extracted_details.dates %}
+          <ul>{% for date in document.extracted_details.dates %}<li>{{ date }}</li>{% endfor %}</ul>
+        {% else %}<p class="record-summary-empty">No supported date format detected.</p>{% endif %}
+      </section>
+    </div>
+    <p class="record-summary-disclaimer"><i class="bi bi-shield-exclamation"></i> OCR and matching can be wrong, especially for handwriting. Patient review is not clinician verification. These results do not diagnose or recommend treatment; discuss questions with a qualified clinician.</p>
+  </section>
+
+</div>
+{% endblock %}

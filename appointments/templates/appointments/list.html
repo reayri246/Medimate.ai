@@ -3,35 +3,29 @@
 {% block title %}Appointments | MediMate AI{% endblock %}
 
 {% block content %}
-<div class="row mt-4 g-4">
-  <div class="col-lg-5">
-    <div class="card shadow-sm border-0 p-4">
-      <h2 class="mb-3">Add appointment</h2>
-      <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Save appointment</button>
-      </form>
-    </div>
+<div class="mt-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1>Your appointments</h1><p class="text-secondary mb-0">Requests need confirmation from the doctor’s office.</p></div>
+    <a href="{% url 'appointment_request' %}" class="btn btn-primary">Find a doctor</a>
   </div>
-  <div class="col-lg-7">
-    <div class="card shadow-sm border-0 p-4">
-      <h2 class="mb-3">Upcoming schedule</h2>
-      {% if appointments %}
-        {% for appointment in appointments %}
-          <div class="border rounded p-3 mb-2">
-            <div class="d-flex justify-content-between align-items-center">
-              <strong>{{ appointment.title }}</strong>
-              <span class="badge bg-success-subtle text-success">{{ appointment.status }}</span>
-            </div>
-            <small>{{ appointment.scheduled_at|date:"M d, Y h:i A" }}</small>
-            {% if appointment.notes %}<p class="mb-0 mt-2 text-secondary">{{ appointment.notes }}</p>{% endif %}
+  {% if appointments %}
+    {% for appointment in appointments %}
+      <section class="dashboard-panel mb-3">
+        <div class="d-flex flex-wrap justify-content-between gap-2">
+          <div>
+            <h2>{{ appointment.title }}</h2>
+            {% if appointment.doctor %}<p class="mb-1">{{ appointment.doctor.name }} · {{ appointment.doctor.get_specialty_display }}</p>{% endif %}
+            {% if appointment.requested_date %}<p class="text-secondary mb-1">Requested date: {{ appointment.requested_date|date:"F j, Y" }}</p>{% endif %}
+            {% if appointment.scheduled_at %}<p class="text-secondary mb-1">Confirmed time: {{ appointment.scheduled_at|date:"F j, Y, g:i A" }}</p>{% endif %}
+            {% if appointment.notes %}<p class="mb-0">{{ appointment.notes }}</p>{% endif %}
           </div>
-        {% endfor %}
-      {% else %}
-        <p class="text-secondary mb-0">No appointments scheduled yet.</p>
-      {% endif %}
-    </div>
-  </div>
+          <span class="badge {% if appointment.status == 'accepted' or appointment.status == 'scheduled' %}text-bg-success{% elif appointment.status == 'rejected' %}text-bg-danger{% else %}text-bg-warning{% endif %} align-self-start">{{ appointment.get_status_display }}</span>
+        </div>
+        <a href="{% url 'appointment_letter' appointment.pk %}" class="btn btn-sm btn-outline-primary mt-3">View / print appointment letter</a>
+      </section>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info">You have no appointment requests yet.</div>
+  {% endif %}
 </div>
 {% endblock %}

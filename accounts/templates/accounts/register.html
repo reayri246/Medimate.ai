@@ -3,19 +3,59 @@
 {% block title %}Register | MediMate AI{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-  <div class="col-md-6">
-    <div class="card shadow-sm border-0 p-4">
-      <h2 class="mb-3">Create your account</h2>
-      <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button class="btn btn-primary w-100" type="submit">Create account</button>
-      </form>
-      <div class="mt-3 text-center">
-        <small>Already a member? <a href="{% url 'login' %}">Log in</a></small>
+<div class="login-page register-page">
+  <section class="login-card register-card" aria-labelledby="register-heading">
+    <div class="login-welcome">
+      <a class="login-brand" href="{% url 'home' %}">
+        <span class="login-brand-mark"><i class="bi bi-heart-pulse-fill"></i></span>
+        <span>MediMate <strong>AI</strong></span>
+      </a>
+      <span class="login-welcome-tag"><i class="bi bi-shield-check me-1"></i> YOUR PERSONAL HEALTH SPACE</span>
+      <div class="login-medical-art" aria-hidden="true">
+        <span class="login-art-orbit login-art-orbit-one"></span>
+        <span class="login-art-orbit login-art-orbit-two"></span>
+        <span class="login-art-cross"><i class="bi bi-plus-lg"></i></span>
+        <span class="login-art-heart"><i class="bi bi-heart-pulse-fill"></i></span>
+        <span class="login-art-dot login-art-dot-one"></span>
+        <span class="login-art-dot login-art-dot-two"></span>
       </div>
+      <h2>Your health journey, in one place.</h2>
+      <p>Create an account to organize your records, keep personal notes, and manage appointments.</p>
+      <div class="login-privacy-note"><i class="bi bi-lock-fill"></i><span>Your account is personal to you.</span></div>
     </div>
-  </div>
+
+    <div class="login-form-panel register-form-panel">
+      <div class="login-form-heading">
+        <span class="login-form-icon"><i class="bi bi-person-plus"></i></span>
+        <p class="eyebrow mb-1">GET STARTED</p>
+        <h1 id="register-heading">Create your account</h1>
+        <p class="login-form-subtitle">A few details to set up your personal space.</p>
+      </div>
+
+      <form method="post" class="login-form register-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger login-error register-field-full" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+          <div class="login-field{% if field.name == 'password1' or field.name == 'password2' %} register-field-full{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            <span class="login-input-wrap">
+              {% if field.name == 'email' %}<i class="bi bi-envelope"></i>
+              {% elif field.name == 'password1' or field.name == 'password2' %}<i class="bi bi-lock"></i>
+              {% else %}<i class="bi bi-person"></i>{% endif %}
+              {{ field }}
+            </span>
+            {% if field.errors %}<div class="login-field-error" role="alert">{{ field.errors }}</div>{% endif %}
+            {% if field.help_text %}<div class="register-field-help">{{ field.help_text }}</div>{% endif %}
+          </div>
+        {% endfor %}
+        <button class="btn btn-primary login-submit register-submit register-field-full" type="submit">Create account <i class="bi bi-arrow-right ms-2"></i></button>
+      </form>
+
+      <p class="login-register-prompt">Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+      <p class="login-medical-disclaimer"><i class="bi bi-info-circle me-1"></i> For education and record-keeping only. Not for medical decisions.</p>
+    </div>
+  </section>
 </div>
 {% endblock %}

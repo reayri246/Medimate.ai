@@ -3,13 +3,108 @@
 {% block title %}Admin portal | MediMate AI{% endblock %}
 
 {% block content %}
-<div class="mt-4">
-  <h2>Admin portal</h2>
-  <div class="row g-4 mt-1">
-    <div class="col-md-3"><div class="dashboard-card"><div class="text-secondary small">Users</div><h3>{{ stats.users }}</h3></div></div>
-    <div class="col-md-3"><div class="dashboard-card"><div class="text-secondary small">Appointments</div><h3>{{ stats.appointments }}</h3></div></div>
-    <div class="col-md-3"><div class="dashboard-card"><div class="text-secondary small">Health readings</div><h3>{{ stats.measurements }}</h3></div></div>
-    <div class="col-md-3"><div class="dashboard-card"><div class="text-secondary small">Documents</div><h3>{{ stats.documents }}</h3></div></div>
-  </div>
+<div class="admin-dashboard">
+  <section class="admin-dashboard-hero">
+    <div class="admin-dashboard-hero-copy">
+      <span class="admin-dashboard-kicker"><i class="bi bi-shield-plus me-1"></i> MEDIMATE ADMINISTRATION</span>
+      <h1>Care operations overview</h1>
+      <p>Monitor activity across appointments, patient records, and the care team.</p>
+      <a href="{% url 'staff_appointment_queue' %}" class="btn admin-dashboard-hero-button"><i class="bi bi-calendar2-check me-2"></i>Open appointment desk</a>
+    </div>
+    <div class="admin-dashboard-hero-art" aria-hidden="true">
+      <span class="admin-dashboard-orbit admin-dashboard-orbit-one"></span>
+      <span class="admin-dashboard-orbit admin-dashboard-orbit-two"></span>
+      <span class="admin-dashboard-medical-mark"><i class="bi bi-heart-pulse-fill"></i></span>
+      <span class="admin-dashboard-plus admin-dashboard-plus-one">+</span>
+      <span class="admin-dashboard-plus admin-dashboard-plus-two">+</span>
+    </div>
+  </section>
+
+  <section class="admin-dashboard-stats" aria-label="Platform totals">
+    <article class="admin-stat-card">
+      <span class="admin-stat-icon is-users"><i class="bi bi-people-fill"></i></span>
+      <div><span class="admin-stat-label">Registered users</span><strong>{{ stats.users }}</strong><small>Accounts on the platform</small></div>
+    </article>
+    <article class="admin-stat-card">
+      <span class="admin-stat-icon is-appointments"><i class="bi bi-calendar2-heart"></i></span>
+      <div><span class="admin-stat-label">Appointments</span><strong>{{ stats.appointments }}</strong><small>Total requests and visits</small></div>
+    </article>
+    <article class="admin-stat-card is-attention">
+      <span class="admin-stat-icon is-pending"><i class="bi bi-hourglass-split"></i></span>
+      <div><span class="admin-stat-label">Awaiting review</span><strong>{{ stats.pending_appointments }}</strong><small>Appointments need attention</small></div>
+    </article>
+    <article class="admin-stat-card">
+      <span class="admin-stat-icon is-readings"><i class="bi bi-clipboard2-pulse"></i></span>
+      <div><span class="admin-stat-label">Health readings</span><strong>{{ stats.measurements }}</strong><small>Patient-tracked measurements</small></div>
+    </article>
+    <article class="admin-stat-card">
+      <span class="admin-stat-icon is-documents"><i class="bi bi-file-earmark-medical"></i></span>
+      <div><span class="admin-stat-label">Medical documents</span><strong>{{ stats.documents }}</strong><small>Uploaded records</small></div>
+    </article>
+  </section>
+
+  <section class="admin-dashboard-actions">
+    <div class="admin-section-heading">
+      <div><span class="admin-section-kicker">QUICK ACCESS</span><h2>Administration tools</h2></div>
+      <span class="admin-section-caption"><i class="bi bi-lock-fill me-1"></i> Restricted to administrators</span>
+    </div>
+    <div class="admin-action-grid">
+      <a class="admin-action-card" href="{% url 'staff_appointment_queue' %}">
+        <span class="admin-action-icon is-teal"><i class="bi bi-calendar2-check"></i></span>
+        <span><strong>Appointment desk</strong><small>Review and manage requests</small></span>
+        <i class="bi bi-arrow-up-right admin-action-arrow"></i>
+      </a>
+      <a class="admin-action-card" href="{% url 'admin:appointments_doctor_changelist' %}">
+        <span class="admin-action-icon is-blue"><i class="bi bi-person-vcard"></i></span>
+        <span><strong>Manage doctors and duty schedule</strong><small>Manage care team availability</small></span>
+        <i class="bi bi-arrow-up-right admin-action-arrow"></i>
+      </a>
+      <a class="admin-action-card" href="{% url 'admin:prescriptions_documentupload_changelist' %}">
+        <span class="admin-action-icon is-violet"><i class="bi bi-folder2-open"></i></span>
+        <span><strong>Patient reports</strong><small>Review uploaded documents</small></span>
+        <i class="bi bi-arrow-up-right admin-action-arrow"></i>
+      </a>
+      <a class="admin-action-card" href="{% url 'admin_send_notification' %}">
+        <span class="admin-action-icon is-amber"><i class="bi bi-megaphone"></i></span>
+        <span><strong>Send user notification</strong><small>Share an in-app update</small></span>
+        <i class="bi bi-arrow-up-right admin-action-arrow"></i>
+      </a>
+      <a class="admin-action-card" href="{% url 'admin:accounts_user_changelist' %}">
+        <span class="admin-action-icon is-cyan"><i class="bi bi-people"></i></span>
+        <span><strong>User accounts</strong><small>View registered accounts</small></span>
+        <i class="bi bi-arrow-up-right admin-action-arrow"></i>
+      </a>
+    </div>
+  </section>
+
+  <section class="dashboard-panel admin-activity-panel">
+    <div class="admin-section-heading">
+      <div><span class="admin-section-kicker">AUDIT TRAIL</span><h2>Recent activity</h2><p>Appointment, doctor, report, and administration events.</p></div>
+      <span class="admin-activity-indicator"><i class="bi bi-activity me-1"></i> Latest events</span>
+    </div>
+    {% if recent_activity %}
+      <div class="admin-activity-list">
+        {% for item in recent_activity %}
+          <article class="admin-activity-item">
+            <span class="admin-activity-icon {% cycle 'is-teal' 'is-blue' 'is-amber' 'is-violet' %}"><i class="bi bi-{% cycle 'clipboard2-pulse' 'person-check' 'file-earmark-medical' 'gear' %}"></i></span>
+            <div class="admin-activity-copy">
+              <strong>{{ item.description }}</strong>
+              <span>{{ item.context }}</span>
+            </div>
+            <div class="admin-activity-meta">
+              {% if item.actor %}<span>{{ item.actor.get_full_name|default:item.actor.username }}</span>{% endif %}
+              <time>{{ item.created_at|date:"M j, Y · g:i A" }}</time>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="admin-activity-empty">
+        <span><i class="bi bi-clipboard2-pulse"></i></span>
+        <strong>No recent activity</strong>
+        <p>New appointment and administration events will appear here.</p>
+      </div>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Review appointment | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-lg-8">
+    <section class="dashboard-panel">
+      <h1>Review appointment request</h1>
+      <p><strong>Patient:</strong> {{ appointment.user.get_full_name|default:appointment.user.username }}</p>
+      <p><strong>Doctor:</strong> {{ appointment.doctor.name }} · {{ appointment.doctor.get_specialty_display }}</p>
+      <p><strong>Requested date:</strong> {{ appointment.requested_date|date:"F j, Y" }}</p>
+      {% if working_hours %}<p><strong>Doctor’s working hours:</strong> {{ working_hours.0|time:"g:i A" }}–{{ working_hours.1|time:"g:i A" }}</p>{% endif %}
+      <h2 class="h5">Reason for consultation</h2>
+      <p style="white-space: pre-wrap">{{ appointment.symptoms }}</p>
+      <form method="post" class="mt-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Save decision and notify patient</button>
+        <a href="{% url 'staff_appointment_queue' %}" class="btn btn-outline-secondary">Cancel</a>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

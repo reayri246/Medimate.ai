@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Aura 5 team | MediMate AI{% endblock %}
+
+{% block content %}
+<div class="team-page mt-4">
+  <section class="team-hero">
+    <span class="team-hero-mark"><i class="bi bi-stars"></i></span>
+    <p class="eyebrow mb-1">MEET THE DEVELOPERS</p>
+    <h1>Aura 5</h1>
+    <p>The team behind MediMate AI, building a clearer and more organized way to manage everyday health information.</p>
+    <a href="{% url 'home' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to MediMate AI</a>
+  </section>
+
+  <section class="team-member-grid" aria-label="Aura 5 team members">
+    {% for member in team_members %}
+      <article class="team-member-card">
+        <span class="team-member-avatar"><i class="bi {{ member.icon }}"></i></span>
+        <p class="eyebrow mb-1">{% if forloop.first %}TEAM LEADERSHIP{% else %}TEAM MEMBER{% endif %}</p>
+        <h2>{{ member.name }}</h2>
+        <span class="team-member-role">{{ member.role }}</span>
+        <div class="team-member-id"><i class="bi bi-person-vcard"></i><span><small>Roll number</small><strong>{{ member.roll_number }}</strong></span></div>
+      </article>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

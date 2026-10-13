@@ -1,8 +1,7 @@
 from django.shortcuts import get_object_or_404, render
 
-from .forms import MedicineComparisonForm, MedicineSearchForm
+from .forms import MedicineSearchForm
 from .models import Medicine
-from .safety import compare_medicines, verified_medicines
 
 
 def medicine_list(request):
@@ -25,22 +24,3 @@ def medicine_list(request):
 def medicine_detail(request, slug):
     medicine = get_object_or_404(Medicine, slug=slug)
     return render(request, 'medicines/detail.html', {'medicine': medicine})
-
-
-def medicine_compare(request):
-    result = None
-    if request.method == 'POST':
-        form = MedicineComparisonForm(request.POST)
-        if form.is_valid():
-            result = compare_medicines(form.cleaned_data['medicines'])
-    else:
-        form = MedicineComparisonForm()
-    return render(
-        request,
-        'medicines/compare.html',
-        {
-            'form': form,
-            'result': result,
-            'verified_medicine_count': len(verified_medicines()),
-        },
-    )

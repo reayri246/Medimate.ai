@@ -3,9 +3,12 @@ __pycache__/
 *.sqlite3
 .env
 .env.*
+!.env.example
 kaggle.json
 venv/
 .venv/
+.venv-crnn/
+/artifacts/
 .DS_Store
 staticfiles/
 media/

@@ -15,9 +15,16 @@ LAB_TEST_NAMES = (
     'hemoglobin', 'haemoglobin', 'hb', 'glucose', 'blood sugar', 'fasting sugar',
     'hba1c', 'wbc', 'white blood cell', 'rbc', 'red blood cell', 'platelet',
     'creatinine', 'urea', 'cholesterol', 'triglyceride', 'tsh', 'sodium', 'potassium',
+    'egfr', 'estimated glomerular filtration rate', 'alt', 'alanine aminotransferase',
+    'ast', 'aspartate aminotransferase', 'bilirubin', 'albumin', 'calcium',
+    'chloride', 'bicarbonate', 'hematocrit', 'haematocrit', 'mcv', 'mch',
+    'vitamin d', 'vitamin b12', 'ferritin', 'crp', 'c reactive protein',
 )
 LAB_VALUE_PATTERN = re.compile(
-    r'(?i)(?P<name>' + '|'.join(re.escape(name) for name in LAB_TEST_NAMES) +
+    r'(?i)(?P<name>' + '|'.join(
+        re.escape(name)
+        for name in sorted(LAB_TEST_NAMES, key=len, reverse=True)
+    ) +
     r')\s*(?:[:=]\s*|\s+)(?P<value>\d+(?:[.,]\d+)?)\s*(?P<unit>'
     r'mg/dl|mg/dL|g/dl|g/L|mmol/L|µmol/L|umol/L|mIU/L|%|10\^?\d*/?L|'
     r'cells/?[uμµ]L|[a-zA-Zμµ/]+)?'

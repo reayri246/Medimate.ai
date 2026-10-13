@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient report | Admin portal{% endblock %}
+
+{% block content %}
+<div class="detail-page mt-4">
+  <a href="{% url 'admin:prescriptions_documentupload_changelist' %}" class="btn btn-link px-0">&larr; Back to patient reports</a>
+  <section class="dashboard-panel mt-2">
+    <div class="d-flex flex-wrap justify-content-between gap-3">
+      <div>
+        <p class="eyebrow mb-1">RESTRICTED ADMINISTRATOR VIEW</p>
+        <h1 class="h3">{{ document.title }}</h1>
+        <p class="text-secondary mb-0">Patient: {{ document.user.get_full_name|default:document.user.username }} · {{ document.get_document_type_display }} · {{ document.created_at|date:"M j, Y g:i A" }}</p>
+      </div>
+      <a class="btn btn-outline-primary align-self-start" href="{{ download_url }}">Download original securely</a>
+    </div>
+    <div class="alert alert-warning mt-3 mb-0">OCR is provisional and may misread handwriting, numbers, units, and dates. Compare with the original; do not use extracted text alone to make a care decision.</div>
+  </section>
+
+  {% if document.extracted_details.test_values %}
+    <section class="dashboard-panel mt-3">
+      <h2 class="h5">Text-matched report values</h2>
+      <ul class="mb-0">{% for item in document.extracted_details.test_values %}<li>{{ item.name }}: {{ item.value }} {{ item.unit }}{% if item.printed_reference_range %} · Printed reference {{ item.printed_reference_range }} {{ item.unit }}{% endif %}</li>{% endfor %}</ul>
+    </section>
+  {% endif %}
+
+  <section class="dashboard-panel mt-3">
+    <h2 class="h5">Local OCR text</h2>
+    <pre class="text-wrap mb-0" style="white-space:pre-wrap">{{ document.extracted_text|default:"No text was extracted." }}</pre>
+  </section>
+</div>
+{% endblock %}

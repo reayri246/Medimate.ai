@@ -22,10 +22,9 @@ class MedicineAdmin(admin.ModelAdmin):
         'name',
         'active_ingredient',
         'category',
-        'is_non_prescription',
         'safety_data_verified',
     )
-    list_filter = ('category', 'is_non_prescription', 'safety_data_verified')
+    list_filter = ('category', 'safety_data_verified')
     search_fields = ('name', 'active_ingredient', 'ingredients__name', 'ingredients__standard_name')
     prepopulated_fields = {'slug': ('name',)}
     inlines = (MedicineIngredientInline,)
@@ -35,7 +34,6 @@ class MedicineAdmin(admin.ModelAdmin):
         }),
         ('Source and verification', {
             'fields': (
-                'is_non_prescription',
                 'safety_data_verified',
                 'source_name',
                 'source_url',
